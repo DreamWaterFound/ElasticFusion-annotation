@@ -1,3 +1,14 @@
+/**
+ * @file RawLogReader.h
+ * @author guoqing (1337841346@qq.com)
+ * @brief 记录文件读取器
+ * @version 0.1
+ * @date 2020-01-03
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -32,9 +43,18 @@
 #include <string>
 #include <stack>
 
+
+/** @brief 原始记录文件读取器 */
+// ? 这个读取器和父类有什么不同?
 class RawLogReader : public LogReader
 {
     public:
+    
+        /**
+         * @brief 构造函数
+         * @param[in] file 记录文件位置
+         * @param[in] flipColors 是否要翻转图像
+         */
         RawLogReader(std::string file, bool flipColors);
 
         virtual ~RawLogReader();

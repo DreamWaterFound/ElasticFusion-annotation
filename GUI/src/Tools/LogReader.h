@@ -1,3 +1,14 @@
+/**
+ * @file LogReader.h
+ * @author guoqing (1337841346@qq.com)
+ * @brief 记录文件读取器
+ * @version 0.1
+ * @date 2020-01-03
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -35,9 +46,15 @@
 
 #include "JPEGLoader.h"
 
+/** @brief 记录文件读取器 */
 class LogReader
 {
     public:
+        /**
+         * @brief 构造函数
+         * @param[in] file 记录文件路径
+         * @param[in] flipColors 是否翻转图像
+         */
         LogReader(std::string file, bool flipColors)
          : flipColors(flipColors),
            timestamp(0),
@@ -73,27 +90,27 @@ class LogReader
 
         virtual void setAuto(bool value) = 0;
 
-        bool flipColors;
-        int64_t timestamp;
+        bool flipColors;                ///< 是否左右翻转图像
+        int64_t timestamp;              ///? 起始时间戳?
 
-        unsigned short * depth;
-        unsigned char * rgb;
-        int currentFrame;
+        unsigned short * depth;         ///?
+        unsigned char * rgb;            ///?
+        int currentFrame;               ///?
 
     protected:
-        Bytef * decompressionBufferDepth;
-        Bytef * decompressionBufferImage;
-        unsigned char * depthReadBuffer;
-        unsigned char * imageReadBuffer;
+        Bytef * decompressionBufferDepth;   ///? 目测是解压得到深度图像缓存的地方
+        Bytef * decompressionBufferImage;   ///? 目测是解压得到彩色图像缓存的地方
+        unsigned char * depthReadBuffer;    ///< 读取深度图像的时候, 一张图像的缓冲区头指针
+        unsigned char * imageReadBuffer;    ///< 读取彩色图像的时候, 一张图像的缓冲区头指针
         int32_t depthSize;
         int32_t imageSize;
 
-        const std::string file;
-        FILE * fp;
-        int32_t numFrames;
-        int width;
-        int height;
-        int numPixels;
+        const std::string file;             ///< 记录文件的路径
+        FILE * fp;                          ///< C 风格的文件指针
+        int32_t numFrames;          ///< 记录文件中帧的个数
+        int width;                  ///< 输入图像的宽度
+        int height;                 ///< 输入图像的高度
+        int numPixels;              ///< 输入图像的像素数目
 
         JPEGLoader jpeg;
 };

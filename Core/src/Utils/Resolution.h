@@ -1,3 +1,14 @@
+/**
+ * @file Resolution.h
+ * @author guoqing (1337841346@qq.com)
+ * @brief 分辨率对象
+ * @version 0.1
+ * @date 2020-01-03
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -23,16 +34,31 @@
 
 #include "../Defines.h"
 
+/** @brief 分辨率对象 */
 class Resolution
 {
     public:
+        /**
+         * @brief 获取给定分辨率的分辨率对象实例, 静态函数
+         * @param[in] width 给定宽度
+         * @param[in] height 给定高度
+         * @return EFUSION_API const& getInstance 分辨率对象实例
+         */
         EFUSION_API static const Resolution & getInstance(int width = 0,int height = 0);
 
+        /**
+         * @brief 获取宽度
+         * @return const int& 
+         */
         const int & width() const
         {
             return imgWidth;
         }
 
+        /**
+         * @brief 获取高度
+         * @return const int& 
+         */
         const int & height() const
         {
             return imgHeight;
@@ -54,17 +80,24 @@ class Resolution
         }
 
     private:
+        /**
+         * @brief 构造函数
+         * @param[in] width 给定宽度
+         * @param[in] height 给定高度
+         */
         Resolution(int width, int height)
          : imgWidth(width),
            imgHeight(height),
            imgNumPixels(width * height)
         {
+            // 不允许为0x0的图像存在
             assert(width > 0 && height > 0 && "You haven't initialised the Resolution class!");
         }
 
-        const int imgWidth;
-        const int imgHeight;
-        const int imgNumPixels;
+        // 分辨率信息
+        const int imgWidth;                 ///< 图像宽度
+        const int imgHeight;                ///< 图像高度
+        const int imgNumPixels;             ///< 图像中所包含的像素个数
 };
 
 #endif /* RESOLUTION_H_ */

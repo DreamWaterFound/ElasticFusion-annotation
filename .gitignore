@@ -3,3 +3,6 @@ deps/
 .project
 .cproject
 *.user
+**/.VSCodeCounter/**
+**/sourcetrail/**
+

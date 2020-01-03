@@ -23,21 +23,26 @@ Parse::Parse()
 
 }
 
+// 获取当前解析器的一个实例
 const Parse & Parse::get()
 {
   static const Parse instance;
   return instance;
 }
 
+// 对给出的字符型参数进行解析工作
 int Parse::arg(int argc, char** argv, const char* str, std::string &val) const
 {
+    // 寻找这个参数在的参数项id
     int index = findArg(argc, argv, str) + 1;
 
     if(index > 0 && index < argc)
     {
+        // 说明找到了, 获取这个参数项的完整内容
         val = argv[index];
     }
 
+    // 如果找不到, 这里就是负数
     return index - 1;
 }
 
@@ -55,6 +60,7 @@ int Parse::arg(int argc, char** argv, const char* str, float &val) const
 
 int Parse::arg(int argc, char** argv, const char* str, int &val) const
 {
+    
     int index = findArg(argc, argv, str) + 1;
 
     if(index > 0 && index < argc)
@@ -94,6 +100,7 @@ std::string Parse::baseDir() const
     return currentVal;
 }
 
+// 寻找给定的参数名称出现在的参数id
 int Parse::findArg(int argc, char** argv, const char* argument_name) const
 {
     for(int i = 1; i < argc; ++i)

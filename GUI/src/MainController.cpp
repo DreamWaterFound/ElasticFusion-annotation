@@ -1,3 +1,14 @@
+/**
+ * @file MainController.cpp
+ * @author guoqing (1337841346@qq.com)
+ * @brief 实现 GUI 程序的主要功能
+ * @version 0.1
+ * @date 2020-01-03
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -18,8 +29,12 @@
  
 #include "MainController.h"
 
+
+// 构造函数
 MainController::MainController(int argc, char * argv[])
- : good(true),
+ : 
+   // ? 下面的 这些目前还意义不明
+   good(true),
    eFusion(0),
    gui(0),
    groundTruthOdometry(0),
@@ -28,38 +43,54 @@ MainController::MainController(int argc, char * argv[])
    resetButton(false),
    resizeStream(0)
 {
+    // step 0 解析命令行参数
+    // 这个变量用于缓存后面多个参数的内容
     std::string empty;
+    // 如果找到了, 返回值>=0; 反之找不到
+    // ? 这个变量好像一直没有被用到?
     iclnuim = Parse::get().arg(argc, argv, "-icl", empty) > -1;
 
+    // 解析相机参数文件
     std::string calibrationFile;
     Parse::get().arg(argc, argv, "-cal", calibrationFile);
 
+    // 设定分辨率对象, 这个分辨率和 Kinect1 的分辨率是相同的
     Resolution::getInstance(640, 480);
 
     if(calibrationFile.length())
     {
+        // 如果命令行参数中的确指定要使用的相机内参
         loadCalibration(calibrationFile);
     }
     else
     {
+        // 如果命令行参数中没有指定相机内参文件, 那么就使用默认内参
         Intrinsics::getInstance(528, 528, 320, 240);
     }
 
+    // 查看是否给定要使用录制的文件
     Parse::get().arg(argc, argv, "-l", logFile);
 
     if(logFile.length())
     {
-        std::cout<<"branch 2"<<std::endl;
-        logReader = new RawLogReader(logFile, Parse::get().arg(argc, argv, "-f", empty) > -1);
+        // 如果要使用录制的文件, 就要生成记录文件读取器
+        logReader = new RawLogReader(
+            logFile,                                            // 记录文件的路径
+            Parse::get().arg(argc, argv, "-f", empty) > -1);    // 是否要左右翻转得到的图像, 这里只需要知道是否存在这个参数标志就可以了
     }
     else
     {
-        std::cout<<"branch 2"<<std::endl;
+        // 如果使用实际的传感器, 那么就生成所谓的"实时记录读取器"
         bool flipColors = Parse::get().arg(argc,argv,"-f",empty) > -1;
-        logReader = new LiveLogReader(logFile, flipColors, LiveLogReader::CameraType::OpenNI2);
+        // HERE
+        logReader = new LiveLogReader(
+            logFile,                //? 此时这个记录文件路径为空啊? 怀疑起到了 dummy 的作用
+            flipColors,             // 是否翻转图像
+            LiveLogReader::CameraType::OpenNI2); // 使用的相机类型
 
         good = ((LiveLogReader *)logReader)->cam->ok();
 
+        // 如果要使用Realsense作输入
 #ifdef WITH_REALSENSE
         if(!good)
         {
@@ -158,21 +189,28 @@ MainController::~MainController()
     }
 }
 
+// 加载指定文件中的相机内参信息
 void MainController::loadCalibration(const std::string & filename)
 {
+    // 输入文件流对象
     std::ifstream file(filename);
+    // 保存每一行的信息
     std::string line;
 
+    // 确保不是空文件
     assert(!file.eof());
 
     double fx, fy, cx, cy;
 
+    // 读取内参
     std::getline(file, line);
 
     int n = sscanf(line.c_str(), "%lg %lg %lg %lg", &fx, &fy, &cx, &cy);
 
+    // 严格检查
     assert(n == 4 && "Ooops, your calibration file should contain a single line with fx fy cx cy!");
 
+    // 构造内参对象 静态类对象, 生成一次, 到处均可访问
     Intrinsics::getInstance(fx, fy, cx, cy);
 }
 

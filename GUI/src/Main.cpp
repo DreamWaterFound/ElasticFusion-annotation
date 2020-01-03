@@ -1,3 +1,14 @@
+/**
+ * @file Main.cpp
+ * @author guoqing (1337841346@qq.com)
+ * @brief GUI 界面启动器
+ * @version 0.1
+ * @date 2020-01-03
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -16,8 +27,10 @@
  *
  */
 
+
 #include "MainController.h"
 
+// 说是主要文件, 但是主要的内容还都是在 MainController 这个类中实现的
 int main(int argc, char * argv[])
 {
     MainController mainController(argc, argv);

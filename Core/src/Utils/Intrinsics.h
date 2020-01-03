@@ -1,3 +1,14 @@
+/**
+ * @file Intrinsics.h
+ * @author guoqing (1337841346@qq.com)
+ * @brief 相机内参对象, 包含 fx fy cx cy
+ * @version 0.1
+ * @date 2020-01-03
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -23,9 +34,18 @@
 
 #include "../Defines.h"
 
+/** @brief 保存相机内参 fx fy cx cy 的类 */
 class Intrinsics
 {
     public:
+        /**
+         * @brief 使用给定的内参数, 获取内参类对象 静态成员函数
+         * @param[in] fx 
+         * @param[in] fy 
+         * @param[in] cx 
+         * @param[in] cy 
+         * @return EFUSION_API const& getInstance 内参类对象的引用
+         */
         EFUSION_API static const Intrinsics & getInstance(float fx = 0,float fy = 0,float cx = 0,float cy = 0);
 
         const float & fx() const
