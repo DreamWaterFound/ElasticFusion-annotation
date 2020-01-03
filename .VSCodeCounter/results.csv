@@ -1,0 +1,91 @@
+filename, language, Shell Script, C++, CUDA C++, CMake, Markdown, comment, blank, total
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Cuda/containers/device_array.hpp, C++, 0, 62, 0, 0, 0, 146, 50, 258
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Cuda/containers/device_array_impl.hpp, C++, 0, 55, 0, 0, 0, 37, 24, 116
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Cuda/containers/device_memory.cpp, C++, 0, 195, 0, 0, 0, 38, 50, 283
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Cuda/containers/device_memory.hpp, C++, 0, 60, 0, 0, 0, 136, 52, 248
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Cuda/containers/device_memory_impl.hpp, C++, 0, 30, 0, 0, 0, 37, 11, 78
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Cuda/containers/kernel_containers.hpp, C++, 0, 42, 0, 0, 0, 36, 18, 96
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Cuda/convenience.cuh, CUDA C++, 0, 0, 18, 0, 0, 50, 6, 74
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Cuda/cudafuncs.cu, CUDA C++, 0, 0, 466, 0, 0, 55, 153, 674
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Cuda/cudafuncs.cuh, CUDA C++, 0, 0, 108, 0, 0, 50, 22, 180
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Cuda/operators.cuh, CUDA C++, 0, 0, 33, 0, 0, 50, 11, 94
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Cuda/reduce.cu, CUDA C++, 0, 0, 834, 0, 0, 58, 249, 1141
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Cuda/types.cuh, CUDA C++, 0, 0, 103, 0, 0, 54, 27, 184
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/CudaComputeTargetFlags.cmake, CMake, 0, 0, 0, 37, 0, 0, 6, 43
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Defines.h, CUDA C++, 0, 0, 10, 0, 0, 5, 3, 18
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Deformation.cpp, C++, 0, 225, 0, 0, 0, 24, 74, 323
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Deformation.h, CUDA C++, 0, 0, 93, 0, 0, 17, 23, 133
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/ElasticFusion.cpp, C++, 0, 775, 0, 0, 0, 34, 188, 997
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/ElasticFusion.h, CUDA C++, 0, 0, 130, 0, 0, 147, 54, 331
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Ferns.cpp, C++, 0, 287, 0, 0, 0, 23, 81, 391
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Ferns.h, CUDA C++, 0, 0, 136, 0, 0, 17, 33, 186
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/FindSuiteSparse.cmake, CMake, 0, 0, 0, 108, 0, 0, 13, 121
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/GPUTexture.cpp, C++, 0, 42, 0, 0, 0, 17, 6, 65
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/GPUTexture.h, CUDA C++, 0, 0, 31, 0, 0, 17, 12, 60
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/GlobalModel.cpp, C++, 0, 422, 0, 0, 0, 26, 186, 634
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/GlobalModel.h, CUDA C++, 0, 0, 84, 0, 0, 23, 25, 132
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/IndexMap.cpp, C++, 0, 355, 0, 0, 0, 17, 108, 480
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/IndexMap.h, CUDA C++, 0, 0, 151, 0, 0, 17, 36, 204
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/PoseMatch.h, CUDA C++, 0, 0, 28, 0, 0, 17, 6, 51
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Shaders/ComputePack.cpp, C++, 0, 39, 0, 0, 0, 17, 18, 74
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Shaders/ComputePack.h, CUDA C++, 0, 0, 21, 0, 0, 17, 9, 47
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Shaders/FeedbackBuffer.cpp, C++, 0, 111, 0, 0, 0, 17, 43, 171
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Shaders/FeedbackBuffer.h, CUDA C++, 0, 0, 32, 0, 0, 17, 12, 61
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Shaders/FillIn.cpp, C++, 0, 123, 0, 0, 0, 17, 56, 196
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Shaders/FillIn.h, CUDA C++, 0, 0, 29, 0, 0, 17, 11, 57
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Shaders/Resize.cpp, C++, 0, 103, 0, 0, 0, 17, 51, 171
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Shaders/Resize.h, CUDA C++, 0, 0, 34, 0, 0, 17, 10, 61
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Shaders/Shaders.h, CUDA C++, 0, 0, 77, 0, 0, 17, 20, 114
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Shaders/Uniform.h, CUDA C++, 0, 0, 57, 0, 0, 17, 15, 89
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Shaders/Vertex.cpp, C++, 0, 2, 0, 0, 0, 35, 4, 41
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Shaders/Vertex.h, CUDA C++, 0, 0, 12, 0, 0, 17, 8, 37
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Utils/CholeskyDecomp.cpp, C++, 0, 65, 0, 0, 0, 17, 26, 108
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Utils/CholeskyDecomp.h, CUDA C++, 0, 0, 17, 0, 0, 17, 9, 43
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Utils/DeformationGraph.cpp, C++, 0, 762, 0, 0, 0, 38, 227, 1027
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Utils/DeformationGraph.h, CUDA C++, 0, 0, 110, 0, 0, 33, 42, 185
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Utils/GPUConfig.h, CUDA C++, 0, 0, 128, 0, 0, 20, 28, 176
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Utils/GraphNode.h, CUDA C++, 0, 0, 17, 0, 0, 17, 6, 40
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Utils/Img.h, CUDA C++, 0, 0, 47, 0, 0, 17, 11, 75
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Utils/Intrinsics.cpp, C++, 0, 6, 0, 0, 0, 5, 4, 15
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Utils/Intrinsics.h, CUDA C++, 0, 0, 36, 0, 0, 17, 12, 65
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Utils/Jacobian.h, CUDA C++, 0, 0, 46, 0, 0, 17, 15, 78
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Utils/OdometryProvider.h, CUDA C++, 0, 0, 56, 0, 0, 18, 23, 97
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Utils/OrderedJacobianRow.h, CUDA C++, 0, 0, 46, 0, 0, 19, 12, 77
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Utils/Parse.cpp, C++, 0, 71, 0, 0, 0, 18, 20, 109
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Utils/Parse.h, CUDA C++, 0, 0, 31, 0, 0, 17, 14, 62
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Utils/RGBDOdometry.cpp, C++, 0, 462, 0, 0, 0, 20, 127, 609
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Utils/RGBDOdometry.h, CUDA C++, 0, 0, 83, 0, 0, 17, 37, 137
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Utils/Resolution.cpp, C++, 0, 6, 0, 0, 0, 5, 4, 15
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Utils/Resolution.h, CUDA C++, 0, 0, 41, 0, 0, 17, 13, 71
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Utils/Stopwatch.h, CUDA C++, 0, 0, 173, 0, 0, 17, 44, 234
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Utils/WindowsExtras.cpp, C++, 0, 26, 0, 0, 0, 6, 9, 41
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Core/src/Utils/WindowsExtras.h, CUDA C++, 0, 0, 6, 0, 0, 5, 6, 17
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/GPUTest/src/GPUTest.cpp, C++, 0, 234, 0, 0, 0, 17, 83, 334
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/GUI/src/FindBLAS.cmake, CMake, 0, 0, 0, 458, 0, 0, 48, 506
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/GUI/src/FindLAPACK.cmake, CMake, 0, 0, 0, 282, 0, 0, 36, 318
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/GUI/src/FindOpenNI2.cmake, CMake, 0, 0, 0, 69, 0, 0, 9, 78
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/GUI/src/FindRealSense.cmake, CMake, 0, 0, 0, 5, 0, 0, 5, 10
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/GUI/src/FindSuiteSparse.cmake, CMake, 0, 0, 0, 108, 0, 0, 13, 121
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/GUI/src/Findefusion.cmake, CMake, 0, 0, 0, 26, 0, 0, 6, 32
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/GUI/src/Main.cpp, C++, 0, 7, 0, 0, 0, 17, 5, 29
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/GUI/src/MainController.cpp, C++, 0, 448, 0, 0, 0, 17, 104, 569
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/GUI/src/MainController.h, CUDA C++, 0, 0, 51, 0, 0, 17, 16, 84
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/GUI/src/Tools/CameraInterface.h, CUDA C++, 0, 0, 18, 0, 0, 0, 7, 25
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/GUI/src/Tools/GUI.h, CUDA C++, 0, 0, 316, 0, 0, 20, 99, 435
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/GUI/src/Tools/GroundTruthOdometry.cpp, C++, 0, 71, 0, 0, 0, 18, 17, 106
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/GUI/src/Tools/GroundTruthOdometry.h, CUDA C++, 0, 0, 27, 0, 0, 17, 11, 55
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/GUI/src/Tools/JPEGLoader.h, CUDA C++, 0, 0, 56, 0, 0, 18, 28, 102
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/GUI/src/Tools/LiveLogReader.cpp, C++, 0, 99, 0, 0, 0, 17, 31, 147
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/GUI/src/Tools/LiveLogReader.h, CUDA C++, 0, 0, 46, 0, 0, 17, 23, 86
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/GUI/src/Tools/LogReader.h, CUDA C++, 0, 0, 64, 0, 0, 17, 21, 102
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/GUI/src/Tools/OpenNI2Interface.cpp, C++, 0, 234, 0, 0, 0, 19, 48, 301
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/GUI/src/Tools/OpenNI2Interface.h, CUDA C++, 0, 0, 123, 0, 0, 19, 41, 183
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/GUI/src/Tools/RawLogReader.cpp, C++, 0, 134, 0, 0, 0, 17, 41, 192
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/GUI/src/Tools/RawLogReader.h, CUDA C++, 0, 0, 31, 0, 0, 17, 19, 67
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/GUI/src/Tools/RealSenseInterface.cpp, C++, 0, 107, 0, 0, 0, 0, 24, 131
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/GUI/src/Tools/RealSenseInterface.h, CUDA C++, 0, 0, 110, 0, 0, 1, 34, 145
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/GUI/src/Tools/ThreadMutexObject.h, CUDA C++, 0, 0, 87, 0, 0, 17, 41, 145
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/README.md, Markdown, 0, 0, 0, 0, 138, 0, 57, 195
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/Tips.md, Markdown, 0, 0, 0, 0, 3, 0, 3, 6
+/home/guoqing/SLAM/ElasticFusion/ElasticFusion-run/build.sh, Shell Script, 53, 0, 0, 0, 0, 5, 7, 65
+Total, -, 53, 5660, 4253, 1093, 141, 2014, 3350, 16564
