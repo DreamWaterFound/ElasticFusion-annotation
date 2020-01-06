@@ -68,7 +68,7 @@ MainController::MainController(int argc, char * argv[])
         Intrinsics::getInstance(528, 528, 320, 240);
     }
 
-    // 查看是否给定要使用录制的文件
+    // step 1 查看是否给定要使用录制的文件, 从而决定使用已经录制的文件还是使用实时的相机作为数据源
     Parse::get().arg(argc, argv, "-l", logFile);
 
     if(logFile.length())
@@ -80,14 +80,15 @@ MainController::MainController(int argc, char * argv[])
     }
     else
     {
-        // 如果使用实际的传感器, 那么就生成所谓的"实时记录读取器"
+        // 如果使用实际的传感器, 那么就生成所谓的"实时记录读取器", 其实就是获取相机实时图像的接口
         bool flipColors = Parse::get().arg(argc,argv,"-f",empty) > -1;
-        // HERE
         logReader = new LiveLogReader(
-            logFile,                //? 此时这个记录文件路径为空啊? 怀疑起到了 dummy 的作用
+            logFile,                // 此时这个记录文件路径为空啊, 并没有起到什么作用
             flipColors,             // 是否翻转图像
             LiveLogReader::CameraType::OpenNI2); // 使用的相机类型
 
+        // 是否已经正确初始化数据源
+        // ! 其实这里还有一种情况是 cam 为 nullptr, 下面的这个操作可能会触发段错误
         good = ((LiveLogReader *)logReader)->cam->ok();
 
         // 如果要使用Realsense作输入
@@ -102,27 +103,34 @@ MainController::MainController(int argc, char * argv[])
 #endif
     }
 
+    // step 2 查看是否给出了真值文件
     if(Parse::get().arg(argc, argv, "-p", poseFile) > 0)
     {
+        // 那么就从外部文件中加载相机的运动轨迹
         groundTruthOdometry = new GroundTruthOdometry(poseFile);
     }
 
-    confidence = 10.0f;
-    depth = 3.0f;
-    icp = 10.0f;
-    icpErrThresh = 5e-05;
-    covThresh = 1e-05;
-    photoThresh = 115;
-    fernThresh = 0.3095f;
+    // step 3 初始化一些参数
+    confidence      = 10.0f;                //? 需要完善补充注释
+    depth           = 3.0f;
+    icp             = 10.0f;
+    icpErrThresh    = 5e-05;
+    covThresh       = 1e-05;
+    photoThresh     = 115;
+    fernThresh      = 0.3095f;
 
-    timeDelta = 200;
-    icpCountThresh = 40000;
-    start = 1;
+    timeDelta       = 200;
+    icpCountThresh  = 40000;
+    start           = 1;
+
+    // 是否命令行参数中指定了 -nso , 如果指定了结果为 false
     so3 = !(Parse::get().arg(argc, argv, "-nso", empty) > -1);
-    end = std::numeric_limits<unsigned short>::max(); //Funny bound, since we predict times in this format really!
+    // ? 什么的边界?
+    end = std::numeric_limits<unsigned short>::max(); // Funny bound, since we predict times in this format really!
 
+    // 从命令行参数中更新这些数值
     Parse::get().arg(argc, argv, "-c", confidence);
-    Parse::get().arg(argc, argv, "-d", depth);
+    Parse::get().arg(argc, argv, "-d", depth);              // 深度切断值
     Parse::get().arg(argc, argv, "-i", icp);
     Parse::get().arg(argc, argv, "-ie", icpErrThresh);
     Parse::get().arg(argc, argv, "-cv", covThresh);
@@ -133,28 +141,36 @@ MainController::MainController(int argc, char * argv[])
     Parse::get().arg(argc, argv, "-s", start);
     Parse::get().arg(argc, argv, "-e", end);
 
+    // 从命令行参数得到是否需要对图像进行翻转
     logReader->flipColors = Parse::get().arg(argc, argv, "-f", empty) > -1;
 
-    openLoop = !groundTruthOdometry && Parse::get().arg(argc, argv, "-o", empty) > -1;
-    reloc = Parse::get().arg(argc, argv, "-rl", empty) > -1;
-    frameskip = Parse::get().arg(argc, argv, "-fs", empty) > -1;
-    quiet = Parse::get().arg(argc, argv, "-q", empty) > -1;
-    fastOdom = Parse::get().arg(argc, argv, "-fo", empty) > -1;
-    rewind = Parse::get().arg(argc, argv, "-r", empty) > -1;
-    frameToFrameRGB = Parse::get().arg(argc, argv, "-ftf", empty) > -1;
+    
+    // ! 有个问题, 如果 groundTruthOdometry 并未初始化, 则这个指针可能不是 nullptr
+    openLoop        = !groundTruthOdometry && Parse::get().arg(argc, argv, "-o", empty) > -1;       //? 是否开环
+    reloc           = Parse::get().arg(argc, argv, "-rl", empty) > -1;                              //? 是否重定位
+    frameskip       = Parse::get().arg(argc, argv, "-fs", empty) > -1;                              //? 是否跳帧
+    quiet           = Parse::get().arg(argc, argv, "-q", empty) > -1;                               // 安静模式
+    fastOdom        = Parse::get().arg(argc, argv, "-fo", empty) > -1;                              // 纯里程计模式
+    rewind          = Parse::get().arg(argc, argv, "-r", empty) > -1;                               // ?
+    frameToFrameRGB = Parse::get().arg(argc, argv, "-ftf", empty) > -1;                             // Frame to frame 的工作方式
 
-    gui = new GUI(logFile.length() == 0, Parse::get().arg(argc, argv, "-sc", empty) > -1);
+    // step 4 初始化 GUI 界面
+    gui = new GUI(
+        logFile.length() == 0,                              // 是否指定了记录文件路径, 没有指定则为 true
+        Parse::get().arg(argc, argv, "-sc", empty) > -1);   // MapViewer部分全屏(即全屏展示构建的模型, 完全没有其他的东西)
 
-    gui->flipColors->Ref().Set(logReader->flipColors);
-    gui->rgbOnly->Ref().Set(false);
-    gui->pyramid->Ref().Set(true);
-    gui->fastOdom->Ref().Set(fastOdom);
-    gui->confidenceThreshold->Ref().Set(confidence);
-    gui->depthCutoff->Ref().Set(depth);
-    gui->icpWeight->Ref().Set(icp);
-    gui->so3->Ref().Set(so3);
-    gui->frameToFrameRGB->Ref().Set(frameToFrameRGB);
+    // 设置 Viewer 中的一些变量
+    gui->flipColors->Ref().Set(logReader->flipColors);      // 彩色通道翻转
+    gui->rgbOnly->Ref().Set(false);                         // ? 仅使用rgb?
+    gui->pyramid->Ref().Set(true);                          // 使用图像金字塔
+    gui->fastOdom->Ref().Set(fastOdom);                     // 使用快速视觉里程计模式(不建图)
+    gui->confidenceThreshold->Ref().Set(confidence);        // ?
+    gui->depthCutoff->Ref().Set(depth);                     // 深度切断\值
+    gui->icpWeight->Ref().Set(icp);                         // ?
+    gui->so3->Ref().Set(so3);                               // ?
+    gui->frameToFrameRGB->Ref().Set(frameToFrameRGB);       // ? 使用帧-帧RGB信息估计相机位姿?
 
+    // 生成用于将图像从原始图像大小降采样一般的图像缩放对象
     resizeStream = new Resize(Resolution::getInstance().width(),
                               Resolution::getInstance().height(),
                               Resolution::getInstance().width() / 2,

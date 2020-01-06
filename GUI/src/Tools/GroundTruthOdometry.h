@@ -1,3 +1,14 @@
+/**
+ * @file GroundTruthOdometry.h
+ * @author guoqing (1337841346@qq.com)
+ * @brief 轨迹真值对象
+ * @version 0.1
+ * @date 2020-01-06
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -23,21 +34,32 @@
 #  include <cstdint>
 #endif 
 
+// Eigen
 #include <Eigen/Core>
 #include <Eigen/SVD>
 #include <Eigen/Cholesky>
 #include <Eigen/Geometry>
 #include <Eigen/LU>
+
+// STL
 #include <iostream>
 #include <fstream>
 #include <map>
+
+// 位姿计算和转换的小工具
 #include <Utils/OdometryProvider.h>
 
+/** @brief // ? */
 class GroundTruthOdometry
 {
     public:
+        /**
+         * @brief 构造函数
+         * @param[in] filename 位姿真值文件
+         */
         GroundTruthOdometry(const std::string & filename);
 
+        /** @brief 析构函数 */
         virtual ~GroundTruthOdometry();
 
         Eigen::Matrix4f getTransformation(uint64_t timestamp);
@@ -45,10 +67,23 @@ class GroundTruthOdometry
         Eigen::MatrixXd getCovariance();
 
     private:
+
+        /**
+         * @brief 从外部文件中加载相机的运动真值
+         * @param[in] filename 
+         */
         void loadTrajectory(const std::string & filename);
 
-        std::map<uint64_t, Eigen::Isometry3f, std::less<int>, Eigen::aligned_allocator<std::pair<const uint64_t, Eigen::Isometry3f> > > camera_trajectory;
-        uint64_t last_utime;
+        std::map<uint64_t,              // 时间戳
+                 Eigen::Isometry3f,     // 位姿
+                 std::less<int>, 
+                 Eigen::aligned_allocator<
+                    std::pair<const uint64_t, Eigen::Isometry3f> 
+                    > 
+                > camera_trajectory;        ///< 保存相机位姿的 vector
+
+
+        uint64_t last_utime;                ///? 最近的什么时间戳?
 };
 
 #endif /* GROUNDTRUTHODOMETRY_H_ */

@@ -62,26 +62,62 @@ class OpenNI2Interface : public CameraInterface
         const int width, height, fps;
 
         void printModes();
+
+        /**
+         * @brief 判断某一种视频格式是否存在
+         * @param[in] x 图像宽度
+         * @param[in] y 图像高度
+         * @param[in] fps 图像帧率
+         * @return 是否存在
+         */
         bool findMode(int x, int y, int fps);
+
+
+        /**
+         * @brief 设置自动曝光
+         * @param[in] value 是/否
+         */
         virtual void setAutoExposure(bool value);
+
+        /**
+         * @brief 设置自动白平衡
+         * @param[in] value 是/否
+         */
         virtual void setAutoWhiteBalance(bool value);
+
+
         bool getAutoExposure();
         bool getAutoWhiteBalance();
 
+        /**
+         * @brief 返回是否初始化成功
+         * @return 是/否
+         */
         virtual bool ok()
         {
             return initSuccessful;
         }
 
+        /**
+         * @brief 输出错误信息
+         * @return std::string 文本形式的错误信息
+         */
         virtual std::string error()
         {
             errorText.erase(std::remove_if(errorText.begin(), errorText.end(), &OpenNI2Interface::isTab), errorText.end());
             return errorText;
         }
 
+        /** @brief 彩色图像到来的时候的回调函数对象, 基于OpenNI 提供的事件驱动机制 */
         class RGBCallback : public openni::VideoStream::NewFrameListener
         {
             public:
+                /**
+                 * @brief 构造函数, 初始化一些值
+                 * @param[in] lastRgbTime 存储上一帧彩色图像时间戳的引用
+                 * @param[in] latestRgbIndex 存储上一帧彩色图像id的引用
+                 * @param[in] rgbBuffers 彩色图像缓冲区
+                 */
                 RGBCallback(int64_t & lastRgbTime,
                             ThreadMutexObject<int> & latestRgbIndex,
                             std::pair<uint8_t *, int64_t> * rgbBuffers)
@@ -90,34 +126,47 @@ class OpenNI2Interface : public CameraInterface
                    rgbBuffers(rgbBuffers)
                 {}
 
+                /** @brief 空析构函数 */
                 virtual ~RGBCallback() {}
 
+                /**
+                 * @brief 当新帧到来的时候自动调用的函数, 实现将获取到的图像保存到缓冲区中并打时间戳的功能
+                 * @param[in] stream 当前视频流
+                 */
                 void onNewFrame(openni::VideoStream& stream)
                 {
                     stream.readFrame(&frame);
 
+                    // 根据当前系统时间生成时间戳
                     lastRgbTime = std::chrono::duration_cast<std::chrono::milliseconds>(
                       std::chrono::system_clock::now().time_since_epoch()).count();
 
+                    // 将当前的图像存入到缓冲区指定位置, 并打上时间戳
                     int bufferIndex = (latestRgbIndex.getValue() + 1) % numBuffers;
-
                     memcpy(rgbBuffers[bufferIndex].first, frame.getData(), frame.getWidth() * frame.getHeight() * 3);
-
                     rgbBuffers[bufferIndex].second = lastRgbTime;
-
                     latestRgbIndex++;
                 }
 
             private:
-                openni::VideoFrameRef frame;
-                int64_t & lastRgbTime;
-                ThreadMutexObject<int> & latestRgbIndex;
-                std::pair<uint8_t *, int64_t> * rgbBuffers;
+                openni::VideoFrameRef frame;                ///< 缓存当前的 OpenNI 帧对象
+                int64_t & lastRgbTime;                      ///< 上一帧彩色图像时间戳的引用
+                ThreadMutexObject<int> & latestRgbIndex;    ///< 上一帧彩色图像id的引用
+                std::pair<uint8_t *, int64_t> * rgbBuffers; ///< 彩色图像缓冲区
         };
 
+        /** @brief 深度图像到来的时候的回调函数对象, 基于OpenNI 提供的事件驱动机制 */
         class DepthCallback : public openni::VideoStream::NewFrameListener
         {
             public:
+                /**
+                 * @brief 构造函数, 初始化一些值
+                 * @param[in] lastDepthTime         上一帧深度图像时间戳的引用
+                 * @param[in] latestDepthIndex      上一帧深度图像id的引用
+                 * @param[in] latestRgbIndex        上一帧彩色图像id的引用
+                 * @param[in] rgbBuffers            彩色图像缓冲区
+                 * @param[in] frameBuffers          帧缓冲区
+                 */
                 DepthCallback(int64_t & lastDepthTime,
                               ThreadMutexObject<int> & latestDepthIndex,
                               ThreadMutexObject<int> & latestRgbIndex,
@@ -130,67 +179,72 @@ class OpenNI2Interface : public CameraInterface
                    frameBuffers(frameBuffers)
                 {}
 
+                /** @brief 空析构函数 */
                 virtual ~DepthCallback() {}
 
+                /**
+                 * @brief 当新的深度图像到来时的回调
+                 * @param[in] stream 外部函数调用的时候给的图像数据流
+                 */
                 void onNewFrame(openni::VideoStream& stream)
                 {
                     stream.readFrame(&frame);
 
+                    // 生成深度图像的时间戳
                     lastDepthTime = std::chrono::duration_cast<std::chrono::milliseconds>(
                       std::chrono::system_clock::now().time_since_epoch()).count();
 
+                    // 将新深度图像保存到帧的缓冲区中的对应位置
                     int bufferIndex = (latestDepthIndex.getValue() + 1) % numBuffers;
-
                     memcpy(frameBuffers[bufferIndex].first.first, frame.getData(), frame.getWidth() * frame.getHeight() * 2);
-
                     frameBuffers[bufferIndex].second = lastDepthTime;
 
+                    // 下面是准备找彩色图像和深度图像的关联关系, 首先获取最近的彩色图像id
                     int lastImageVal = latestRgbIndex.getValue();
-
+                    // 如果为-1说明彩色图像没有到, 那么就先等等(相当于放弃了当前帧的深度图像)
                     if(lastImageVal == -1)
                     {
                         return;
                     }
 
+                    // 如果找到了对应的彩色图像, 那么就去彩色图像缓冲区中索引, 将对应的彩色图像保存到帧缓冲区中的对应位置
                     lastImageVal %= numBuffers;
-
                     memcpy(frameBuffers[bufferIndex].first.second, rgbBuffers[lastImageVal].first, frame.getWidth() * frame.getHeight() * 3);
-
                     latestDepthIndex++;
                 }
 
             private:
-                openni::VideoFrameRef frame;
-                int64_t & lastDepthTime;
-                ThreadMutexObject<int> & latestDepthIndex;
-                ThreadMutexObject<int> & latestRgbIndex;
+                openni::VideoFrameRef frame;                    ///< OpenNI的帧缓存
+                int64_t & lastDepthTime;                        ///< 上一帧深度图像时间戳的引用
+                ThreadMutexObject<int> & latestDepthIndex;      ///< 上一帧深度图像id的引用
+                ThreadMutexObject<int> & latestRgbIndex;        ///< 上一帧彩色图像id的引用
 
-                std::pair<uint8_t *, int64_t> * rgbBuffers;
-                std::pair<std::pair<uint8_t *, uint8_t *>, int64_t> * frameBuffers;
+                std::pair<uint8_t *, int64_t> * rgbBuffers;     ///< 彩色图像缓冲区
+                std::pair<std::pair<uint8_t *, uint8_t *>, int64_t> * frameBuffers; ///< 帧的缓冲区
         };
 
     private:
-        openni::Device device;
+        openni::Device device;              ///< OpenNI2 设备对象
 
-        openni::VideoStream depthStream;
-        openni::VideoStream rgbStream;
+        
+        openni::VideoStream depthStream;    ///< OpenNI2 深度图像流
+        openni::VideoStream rgbStream;      ///< OpenNI2 彩色图像流
 
-        //Map for formats from OpenNI2
-        std::map<int, std::string> formatMap;
+        // Map for formats from OpenNI2
+        std::map<int, std::string> formatMap;   ///< 保存不同流的类型和对应的字符串描述, 建立了id和字符串描述的关系
 
-        int64_t lastRgbTime;
-        int64_t lastDepthTime;
+        int64_t lastRgbTime;                ///< 上一帧的彩色图像时间戳
+        int64_t lastDepthTime;              ///< 上一帧的深度图像时间戳
 
-        ThreadMutexObject<int> latestRgbIndex;
-        std::pair<uint8_t *, int64_t> rgbBuffers[numBuffers];
+        ThreadMutexObject<int> latestRgbIndex;  ///< 有线程锁保护的, 记录最近彩色图像的id
+        std::pair<uint8_t *, int64_t> rgbBuffers[numBuffers];       ///< 彩色图像缓冲区, 第一个元素是缓冲区指针, 第二个元素是时间戳
 
-        RGBCallback * rgbCallback;
-        DepthCallback * depthCallback;
+        RGBCallback * rgbCallback;          ///< 彩色帧数据监听器
+        DepthCallback * depthCallback;      ///< 深度数据监听器
 
-        // 标记是否初始化成功了
-        bool initSuccessful;
-        // 缓存操作 OpenNI 接口过程中的错误提示信息
-        std::string errorText;
+        
+        bool initSuccessful;                ///< 标记是否初始化成功了
+        std::string errorText;              ///< 缓存操作 OpenNI 接口过程中的错误提示信息
 
         //For removing tabs from OpenNI's error messages
         static bool isTab(char c)

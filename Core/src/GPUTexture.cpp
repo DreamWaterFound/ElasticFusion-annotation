@@ -1,3 +1,14 @@
+/**
+ * @file GPUTexture.cpp
+ * @author guoqing (1337841346@qq.com)
+ * @brief GPU中的纹理对象
+ * @version 0.1
+ * @date 2020-01-06
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -25,6 +36,7 @@ const std::string GPUTexture::DEPTH_METRIC = "DEPTH_METRIC";
 const std::string GPUTexture::DEPTH_METRIC_FILTERED = "DEPTH_METRIC_FILTERED";
 const std::string GPUTexture::DEPTH_NORM = "DEPTH_NORM";
 
+// 构造函数
 GPUTexture::GPUTexture(const int width,
                        const int height,
                        const GLenum internalFormat,
@@ -42,21 +54,26 @@ GPUTexture::GPUTexture(const int width,
 {
     if(cuda)
     {
+        // 如果使用 OpenGL 和 CUDA 互操作, 这里就需要在CUDA中注册 OpenGL 的纹理对象
         cudaGraphicsGLRegisterImage(&cudaRes, texture->tid, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly);
     }
     else
     {
+        // 不使用的话设置空指针, 这里直接设置成为0了
         cudaRes = 0;
     }
 }
 
+// 析构函数
 GPUTexture::~GPUTexture()
 {
+    // 释放OpenGL 纹理对象
     if(texture)
     {
         delete texture;
     }
 
+    // 取消 CUDA 中的注册
     if(cudaRes)
     {
         cudaGraphicsUnregisterResource(cudaRes);

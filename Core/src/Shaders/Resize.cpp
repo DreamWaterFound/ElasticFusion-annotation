@@ -1,3 +1,14 @@
+/**
+ * @file Resize.cpp
+ * @author guoqing (1337841346@qq.com)
+ * @brief 对图像进行大小缩放的对象
+ * @version 0.1
+ * @date 2020-01-06
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -22,27 +33,28 @@ Resize::Resize(int srcWidth,
                int srcHeight,
                int destWidth,
                int destHeight)
-: imageTexture(destWidth,
+: imageTexture(destWidth,                       // 创建缩放后彩色图像的纹理
                destHeight,
                GL_RGBA,
                GL_RGB,
                GL_UNSIGNED_BYTE,
                false,
                true),
-  vertexTexture(destWidth,
+  vertexTexture(destWidth,                      // 创建缩放后顶点纹理
                 destHeight,
                 GL_RGBA32F,
                 GL_LUMINANCE,
                 GL_FLOAT,
                 false,
                 true),
-  timeTexture(destWidth,
+  timeTexture(destWidth,                        // 创建缩放后时间的纹理
               destHeight,
               GL_LUMINANCE16UI_EXT,
               GL_LUMINANCE_INTEGER_EXT,
               GL_UNSIGNED_SHORT,
               false,
               true),
+  // 设置着色程序并开辟对应的缓冲区
   imageProgram(loadProgramFromFile("empty.vert", "resize.frag", "quad.geom")),
   imageRenderBuffer(destWidth, destHeight),
   vertexProgram(loadProgramFromFile("empty.vert", "resize.frag", "quad.geom")),
@@ -50,6 +62,7 @@ Resize::Resize(int srcWidth,
   timeProgram(loadProgramFromFile("empty.vert", "resize.frag", "quad.geom")),
   timeRenderBuffer(destWidth, destHeight)
 {
+   // 分别设置帧缓冲区
    imageFrameBuffer.AttachColour(*imageTexture.texture);
    imageFrameBuffer.AttachDepth(imageRenderBuffer);
 
@@ -60,6 +73,7 @@ Resize::Resize(int srcWidth,
    timeFrameBuffer.AttachDepth(timeRenderBuffer);
 }
 
+// 什么也不干的析构函数
 Resize::~Resize()
 {
 }

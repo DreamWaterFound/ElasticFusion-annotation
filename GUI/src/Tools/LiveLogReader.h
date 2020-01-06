@@ -99,10 +99,11 @@ class LiveLogReader : public LogReader
 
         void setAuto(bool value);
 
-		CameraInterface * cam;
+    
+		CameraInterface * cam;      ///< 保存摄像头的接口对象指针
 
 	private:
-		int64_t lastFrameTime;      /// ? 上一帧的时间戳?
+		int64_t lastFrameTime;      /// 上一帧(结构体, 包含彩色图像和深度图像)的时间戳
 		int lastGot;                /// ? 
 };
 

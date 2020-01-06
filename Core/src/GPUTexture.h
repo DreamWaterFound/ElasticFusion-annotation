@@ -1,3 +1,14 @@
+/**
+ * @file GPUTexture.h
+ * @author guoqing (1337841346@qq.com)
+ * @brief GPU 纹理对象
+ * @version 0.1
+ * @date 2020-01-06
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -19,16 +30,30 @@
 #ifndef GPUTEXTURE_H_
 #define GPUTEXTURE_H_
 
+// Pangolin 
 #include <pangolin/pangolin.h>
+// CUDA 
 #include <driver_types.h>
 #include <cuda_gl_interop.h>
 #include <cuda_runtime_api.h>
-
+// DLL
 #include "Defines.h"
 
+/** @brief GPU 纹理的类 */
 class GPUTexture
 {
     public:
+        /**
+         * @brief 构造函数
+         * @param[in] width             纹理图像的宽度
+         * @param[in] height            纹理图像的高度
+         * @param[in] internalFormat    纹理的数据格式
+         * @param[in] format            对纹理格式的处理
+         * @param[in] dataType          每个通道的数据类型
+         * @param[in] draw              // ?
+         * @param[in] cuda              使用CUDA支持
+         * @return EFUSION_API 
+         */
         EFUSION_API GPUTexture(const int width,
                    const int height,
                    const GLenum internalFormat,
@@ -37,23 +62,26 @@ class GPUTexture
                    const bool draw = false,
                    const bool cuda = false);
 
+        /** @brief 析构函数 */
         virtual ~GPUTexture();
 
+        ///? 几个字符串, 标记当前纹理的状态
         EFUSION_API static const std::string RGB, DEPTH_RAW, DEPTH_FILTERED, DEPTH_METRIC, DEPTH_METRIC_FILTERED, DEPTH_NORM;
 
-        pangolin::GlTexture * texture;
+        
+        pangolin::GlTexture * texture;          ///< OpenGL 中的纹理对象句柄
+        cudaGraphicsResource * cudaRes;         ///? OpenGL 纹理对象注册到CUDA中后的资源句柄
 
-        cudaGraphicsResource * cudaRes;
-
-        const bool draw;
+        const bool draw;                        ///? 是否绘制
 
     private:
+        /** @brief 无参构造函数 */
         GPUTexture() : texture(0), cudaRes(0), draw(false), width(0), height(0), internalFormat(0), format(0), dataType(0) {}
-        const int width;
-        const int height;
-        const GLenum internalFormat;
-        const GLenum format;
-        const GLenum dataType;
+        const int width;                        ///< 图像宽度
+        const int height;                       ///< 图像高度
+        const GLenum internalFormat;            ///< 纹理本身的数据格式
+        const GLenum format;                    ///< 对纹理格式的处理
+        const GLenum dataType;                  ///< 每个通道的数据类型
 };
 
 #endif /* GPUTEXTURE_H_ */

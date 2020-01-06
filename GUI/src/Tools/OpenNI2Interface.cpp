@@ -58,12 +58,14 @@ OpenNI2Interface::OpenNI2Interface(int inWidth, int inHeight, int fps)
         rc = device.open(deviceURI);
         if (rc != openni::STATUS_OK)
         {
+            // 打开失败
             errorText.append(openni::OpenNI::getExtendedError());
             openni::OpenNI::shutdown();
             initSuccessful = false;
         }
         else
         {
+            // step 2.1 设置深度图像流和彩色图像流的属性
             openni::VideoMode depthMode;
             depthMode.setFps(fps);
             depthMode.setPixelFormat(openni::PIXEL_FORMAT_DEPTH_1_MM);
@@ -74,6 +76,7 @@ OpenNI2Interface::OpenNI2Interface(int inWidth, int inHeight, int fps)
             colorMode.setPixelFormat(openni::PIXEL_FORMAT_RGB888);
             colorMode.setResolution(width, height);
 
+            // step 2.2 打开深度流
             rc = depthStream.create(device, openni::SENSOR_DEPTH);
             if (rc == openni::STATUS_OK)
             {
@@ -92,6 +95,7 @@ OpenNI2Interface::OpenNI2Interface(int inWidth, int inHeight, int fps)
                 initSuccessful = false;
             }
 
+            // step 2.3 打开视频流
             rc = rgbStream.create(device, openni::SENSOR_COLOR);
             if (rc == openni::STATUS_OK)
             {
@@ -117,9 +121,10 @@ OpenNI2Interface::OpenNI2Interface(int inWidth, int inHeight, int fps)
                 initSuccessful = false;
             }
 
+            // step 2.4 如果上述的各个步骤没有出现明显的问题, 那么就初始化缓冲区, 设置监听器, 并且进行基本的曝光白平衡设置
             if(initSuccessful)
             {
-                //For printing out
+                // For printing out - 建立了流的数据类型和其字符串描述的关系
                 formatMap[openni::PIXEL_FORMAT_DEPTH_1_MM] = "1mm";
                 formatMap[openni::PIXEL_FORMAT_DEPTH_100_UM] = "100um";
                 formatMap[openni::PIXEL_FORMAT_SHIFT_9_2] = "Shift 9 2";
@@ -131,43 +136,57 @@ OpenNI2Interface::OpenNI2Interface(int inWidth, int inHeight, int fps)
                 formatMap[openni::PIXEL_FORMAT_GRAY16] = "GRAY16";
                 formatMap[openni::PIXEL_FORMAT_JPEG] = "JPEG";
 
+                // 确认当前设置的数据流格式的确存在; 后面的字符串目测是在发生断言错误的时候用于提示的
                 assert(findMode(width, height, fps) && "Sorry, mode not supported!");
 
+                // 初始化彩色图和深度图的id, 目前还没有接收到任何图像所以id均设置成为-1
                 latestDepthIndex.assign(-1);
                 latestRgbIndex.assign(-1);
 
+                // 初始化彩色图像缓冲区
                 for(int i = 0; i < numBuffers; i++)
                 {
+                    // calloc 和 malloc 除了参数区别外, 前者还能够初始化分配的内存空间
                     uint8_t * newImage = (uint8_t *)calloc(width * height * 3, sizeof(uint8_t));
+                    // 后面的 int64_t 表示的是时间戳(图像到达时的系统的时间戳)
                     rgbBuffers[i] = std::pair<uint8_t *, int64_t>(newImage, 0);
                 }
 
+                // 初始化帧图像缓冲区
                 for(int i = 0; i < numBuffers; i++)
                 {
+                    // 深度图像
                     uint8_t * newDepth = (uint8_t *)calloc(width * height * 2, sizeof(uint8_t));
+                    // 彩色图像
                     uint8_t * newImage = (uint8_t *)calloc(width * height * 3, sizeof(uint8_t));
                     frameBuffers[i] = std::pair<std::pair<uint8_t *, uint8_t *>, int64_t>(std::pair<uint8_t *, uint8_t *>(newDepth, newImage), 0);
                 }
 
+                // 设置回调函数,本质上是监听器, 基于 OpenNI 提供的事件机制
                 rgbCallback = new RGBCallback(lastRgbTime,
                                               latestRgbIndex,
                                               rgbBuffers);
 
+                // 这个是深度图像的回调, 本质上是监听器, 但是会直接生成帧数据(深度图+彩色图+深度图时间戳)
                 depthCallback = new DepthCallback(lastDepthTime,
                                                   latestDepthIndex,
                                                   latestRgbIndex,
                                                   rgbBuffers,
                                                   frameBuffers);
 
+                // 不要翻转图像
                 depthStream.setMirroringEnabled(false);
                 rgbStream.setMirroringEnabled(false);
 
+                // 设置深度图和彩色图的配准方式, 
                 device.setDepthColorSyncEnabled(true);
                 device.setImageRegistrationMode(openni::IMAGE_REGISTRATION_DEPTH_TO_COLOR);
 
+                // 使能自动曝光和白平衡(貌似对于Kinect1来说也没法关闭啊)
                 setAutoExposure(true);
                 setAutoWhiteBalance(true);
 
+                // 添加监听器
                 rgbStream.addNewFrameListener(rgbCallback);
                 depthStream.addNewFrameListener(depthCallback);
             }
@@ -205,12 +224,15 @@ OpenNI2Interface::~OpenNI2Interface()
     }
 }
 
+// 确认某一种视频格式是否存在
 bool OpenNI2Interface::findMode(int x, int y, int fps)
 {
+    // step 1.1 获取当前 OpenNI 支持的深度数据流格式
     const openni::Array<openni::VideoMode> & depthModes = depthStream.getSensorInfo().getSupportedVideoModes();
-
+    // 是否找到对应的视频格式
     bool found = false;
 
+    // step 1.2 遍历, 如果有匹配到的就找到了
     for(int i = 0; i < depthModes.getSize(); i++)
     {
         if(depthModes[i].getResolutionX() == x &&
@@ -229,6 +251,7 @@ bool OpenNI2Interface::findMode(int x, int y, int fps)
 
     found = false;
 
+    // step 2 对于彩色数据流也进行相同的操作
     const openni::Array<openni::VideoMode> & rgbModes = rgbStream.getSensorInfo().getSupportedVideoModes();
 
     for(int i = 0; i < rgbModes.getSize(); i++)
@@ -294,11 +317,13 @@ void OpenNI2Interface::printModes()
     }
 }
 
+// 设置自动曝光
 void OpenNI2Interface::setAutoExposure(bool value)
 {
     rgbStream.getCameraSettings()->setAutoExposureEnabled(value);
 }
 
+// 设置自动白平衡
 void OpenNI2Interface::setAutoWhiteBalance(bool value)
 {
     rgbStream.getCameraSettings()->setAutoWhiteBalanceEnabled(value);

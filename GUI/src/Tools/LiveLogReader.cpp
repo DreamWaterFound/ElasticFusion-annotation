@@ -39,24 +39,23 @@ LiveLogReader::LiveLogReader(
             bool flipColors,    // 是否左右翻转图像
             CameraType type)    // 摄像头类型
  : LogReader(file, flipColors),
-   lastFrameTime(-1),           // ?
+   lastFrameTime(-1),           // 初始化上一帧对象的时间戳
    lastGot(-1)                  // ?
 {
     // step 0 创建相应类型的相机接口
     std::cout << "Creating live capture... "; std::cout.flush();
 
-    // HACK
-     openni::Version version = openni::OpenNI::getVersion();
-		std::cout << version.minor << "."
-				<< version.major << "."
-				<< version.maintenance << "."
-				<< version.build 
-				<< std::endl;
+    // HACK 输出 OpenNI 版本号
+    //  openni::Version version = openni::OpenNI::getVersion();
+	// 	std::cout << version.minor << "."
+	// 			<< version.major << "."
+	// 			<< version.maintenance << "."
+	// 			<< version.build 
+	// 			<< std::endl;
 
     if(type == CameraType::OpenNI2)
     {
       std::cout<<"type == CameraType::OpenNI2"<<std::endl;
-      // HERE
       // 生成 OpenNI 相机接口对象, 参数是图像的大小
       cam = new OpenNI2Interface(Resolution::getInstance().width(),Resolution::getInstance().height());
     }
@@ -68,30 +67,35 @@ LiveLogReader::LiveLogReader(
     }
     else
     {
+      // 没有指定, 那我就报错
       std::cout<<"type not matched."<<std::endl;
       cam = nullptr;
     }
 
+    // step 1 分配解码的深度图像和彩色图像缓冲区
 	decompressionBufferDepth = new Bytef[Resolution::getInstance().numPixels() * 2];
-
 	decompressionBufferImage = new Bytef[Resolution::getInstance().numPixels() * 3];
 
+    // step 2 检查相机状态, 等待第一帧数据出现
     if(!cam || !cam->ok())
     {
+        // 相机不 ok
         std::cout << "failed!" << std::endl;
         std::cout << cam->error();
     }
     else
     {
+        // 相机正常工作
         std::cout << "success!" << std::endl;
-
         std::cout << "Waiting for first frame"; std::cout.flush();
 
+        // 获取初始深度图像id
         int lastDepth = cam->latestDepthIndex.getValue();
 
         do
         {
-          std::this_thread::sleep_for(std::chrono::microseconds(33333));
+            // 等, 直到第一张图像出来
+            std::this_thread::sleep_for(std::chrono::microseconds(33333));
             std::cout << "."; std::cout.flush();
             lastDepth = cam->latestDepthIndex.getValue();
         } while(lastDepth == -1);

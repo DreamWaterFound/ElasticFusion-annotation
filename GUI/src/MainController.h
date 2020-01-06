@@ -64,38 +64,38 @@ class MainController
          */
         void loadCalibration(const std::string & filename);
 
-        bool good;
+        bool good;                  ///< 当前是否已经正确地初始化数据源了
         ElasticFusion * eFusion;
-        GUI * gui;
-        GroundTruthOdometry * groundTruthOdometry;
-        LogReader * logReader;      ///< 记录文件读取器的句柄
+        GUI * gui;                  ///< GUI 窗口对象
+        GroundTruthOdometry * groundTruthOdometry;      ///< 轨迹真值文件对象句柄
+        LogReader * logReader;      ///< 记录文件读取器的句柄, 根据情况也会是实时相机的接口
 
         bool iclnuim;               ///< 命令行中是否指定了参数 -icl
         std::string logFile;        ///< 命令行中指定的记录文件路径
-        std::string poseFile;
+        std::string poseFile;       ///< 命令行参数中指定的真值文件
 
-        float confidence,
-              depth,
-              icp,
-              icpErrThresh,
-              covThresh,
-              photoThresh,
-              fernThresh;
+        float confidence,           ///? 什么的置信度?
+              depth,                ///< 深度切断值
+              icp,                  ///?
+              icpErrThresh,         ///? ICP 迭代误差的最小阈值?
+              covThresh,            ///?
+              photoThresh,          ///? 光度误差的最小阈值?
+              fernThresh;           ///? 随机蕨?
 
-        int timeDelta,
-            icpCountThresh,
-            start,
-            end;
+        int timeDelta,              ///?
+            icpCountThresh,         ///?
+            start,                  ///?
+            end;                    ///?
 
         bool fillIn,
-             openLoop,
-             reloc,
-             frameskip,
-             quiet,
-             fastOdom,
-             so3,
-             rewind,
-             frameToFrameRGB;
+             openLoop,              ///? 是否以开环模式运行
+             reloc,                 ///? 是否使能重定位
+             frameskip,             ///? 跳帧?
+             quiet,                 ///< 是否安静模式
+             fastOdom,              ///< 是否纯里程计模式
+             so3,                   ///? 和命令行参数中是否指定 -nso 参数有关系
+             rewind,                ///?
+             frameToFrameRGB;       ///? 是否使用 Frame to Frame 工作模式
 
         int framesToSkip;
         bool streaming;

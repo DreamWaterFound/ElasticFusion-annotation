@@ -1,3 +1,14 @@
+/**
+ * @file Shaders.h
+ * @author guoqing (1337841346@qq.com)
+ * @brief 用于管理着色器程序的类, 以及加载 GLSL 程序使用的全局静态函数
+ * @version 0.1
+ * @date 2020-01-06
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -19,14 +30,21 @@
 #ifndef SHADERS_SHADERS_H_
 #define SHADERS_SHADERS_H_
 
+// GLSL
 #include <pangolin/gl/glsl.h>
+// STL
 #include <memory>
+
+// 命令行参数解析
 #include "../Utils/Parse.h"
+// ?
 #include "Uniform.h"
 
+/** @brief ElasticFusion 对 GLSL 语言程序的封装 */
 class Shader : public pangolin::GlSlProgram
 {
     public:
+        // 空构造函数
         Shader()
         {}
 
@@ -66,6 +84,8 @@ class Shader : public pangolin::GlSlProgram
         }
 };
 
+// ==================== 静态全局函数 ==================
+
 static inline std::shared_ptr<Shader> loadProgramGeomFromFile(const std::string& vertex_shader_file, const std::string& geometry_shader_file)
 {
     std::shared_ptr<Shader> program = std::make_shared<Shader>();
@@ -98,13 +118,31 @@ static inline std::shared_ptr<Shader> loadProgramFromFile(const std::string& ver
     return program;
 }
 
+/**
+ * @brief 加载 GLSL 程序, 用于颜色的渲染
+ * @param[in] vertex_shader_file        顶点着色器
+ * @param[in] fragment_shader_file      片段着色器
+ * @param[in] geometry_shader_file      集合着色器
+ * @return std::shared_ptr<Shader>      生成的 Shader 对象的共享指针
+ */
 static inline std::shared_ptr<Shader> loadProgramFromFile(const std::string& vertex_shader_file, const std::string& fragment_shader_file, const std::string& geometry_shader_file)
 {
+    // 生成一个 Shader 程序对象
     std::shared_ptr<Shader> program = std::make_shared<Shader>();
 
-    program->AddShaderFromFile(pangolin::GlSlVertexShader, Parse::get().shaderDir() + "/" + vertex_shader_file, {}, {Parse::get().shaderDir()});
+    // 设置顶点着色器
+    program->AddShaderFromFile(
+        pangolin::GlSlVertexShader,                             // 着色器类型
+        Parse::get().shaderDir() + "/" + vertex_shader_file,    // 着色器程序文件名
+        {},                                                     // 着色器程序中的宏定义
+        {Parse::get().shaderDir()});                            // 着色器程序的搜索路径
+    
+    // 设置几何着色器
     program->AddShaderFromFile(pangolin::GlSlGeometryShader, Parse::get().shaderDir() + "/" + geometry_shader_file, {}, {Parse::get().shaderDir()});
+    // 设置片段着色器
     program->AddShaderFromFile(pangolin::GlSlFragmentShader, Parse::get().shaderDir() + "/" + fragment_shader_file, {}, {Parse::get().shaderDir()});
+
+    // 调用 glLinkProgram, 连接 GLSL 程序, 创建可执行文件对象
     program->Link();
 
     return program;

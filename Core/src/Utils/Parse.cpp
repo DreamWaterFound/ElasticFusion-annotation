@@ -18,6 +18,7 @@
 
 #include "Parse.h"
 
+// 空构造函数
 Parse::Parse()
 {
 
@@ -46,18 +47,21 @@ int Parse::arg(int argc, char** argv, const char* str, std::string &val) const
     return index - 1;
 }
 
+// 对给出的 float 型参数进行解析工作
 int Parse::arg(int argc, char** argv, const char* str, float &val) const
 {
     int index = findArg(argc, argv, str) + 1;
 
     if(index > 0 && index < argc)
     {
+        // 将对应的字符串转换成为浮点数
         val = atof(argv[index]);
     }
 
     return index - 1;
 }
 
+// 对给出的 int 型参数进行解析工作
 int Parse::arg(int argc, char** argv, const char* str, int &val) const
 {
     
@@ -71,12 +75,14 @@ int Parse::arg(int argc, char** argv, const char* str, int &val) const
     return index - 1;
 }
 
+// 获取着色器程序的存放路径
 std::string Parse::shaderDir() const
 {
+    // ? STR 就是 #SHADER_DIR
+    // SHADER_DIR 这个宏在 <ElasticFusion_root>/Core/src/CMakeLists.txt 中被定义
     std::string currentVal = STR(SHADER_DIR);
-
+    // 判断给定的文件是否存在, 否则就发生断言错误; 后面的字符串是在发生断言错误的时候用于提示我们的
     assert(pangolin::FileExists(currentVal) && "Shader directory not found!");
-
     return currentVal;
 }
 
