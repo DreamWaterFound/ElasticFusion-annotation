@@ -82,6 +82,13 @@ target_link_libraries(efusion
 					  ${EXTRA_WINDOWS_LIBS}
 )
 
+# HACK
+message(STATUS "==> Eigen_LIBRARIES = " ${Eigen_LIBRARIES})
+message(STATUS "==> Pangolin_LIBRARIES = " ${Pangolin_LIBRARIES})
+message(STATUS "==> CUDA_LIBRARIES = " ${CUDA_LIBRARIES})
+message(STATUS "==> SUITESPARSE_LIBRARIES = " ${SUITESPARSE_LIBRARIES})
+message(STATUS "==> EXTRA_WINDOWS_LIBS = " ${EXTRA_WINDOWS_LIBS})
+
 INSTALL(TARGETS efusion
             RUNTIME DESTINATION bin
             LIBRARY DESTINATION lib

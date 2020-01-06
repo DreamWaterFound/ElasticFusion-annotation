@@ -5,4 +5,5 @@ deps/
 *.user
 **/.VSCodeCounter/**
 **/sourcetrail/**
-
+GUI/*.freiburg
+GUI/*.ply

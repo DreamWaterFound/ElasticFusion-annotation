@@ -1,3 +1,14 @@
+/**
+ * @file LiveLogReader.cpp
+ * @author guoqing (1337841346@qq.com)
+ * @brief 获取实时的传感器数据
+ * @version 0.1
+ * @date 2020-01-04
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -16,25 +27,42 @@
  *
  */
 
+
 #include "LiveLogReader.h"
 
 #include "OpenNI2Interface.h"
 #include "RealSenseInterface.h"
 
-LiveLogReader::LiveLogReader(std::string file, bool flipColors, CameraType type)
+// 构造函数
+LiveLogReader::LiveLogReader(
+            std::string file,   // ? 记录文件的路径, 这里没有使用到只是用于构造父类对象
+            bool flipColors,    // 是否左右翻转图像
+            CameraType type)    // 摄像头类型
  : LogReader(file, flipColors),
-   lastFrameTime(-1),
-   lastGot(-1)
+   lastFrameTime(-1),           // ?
+   lastGot(-1)                  // ?
 {
+    // step 0 创建相应类型的相机接口
     std::cout << "Creating live capture... "; std::cout.flush();
+
+    // HACK
+     openni::Version version = openni::OpenNI::getVersion();
+		std::cout << version.minor << "."
+				<< version.major << "."
+				<< version.maintenance << "."
+				<< version.build 
+				<< std::endl;
 
     if(type == CameraType::OpenNI2)
     {
       std::cout<<"type == CameraType::OpenNI2"<<std::endl;
+      // HERE
+      // 生成 OpenNI 相机接口对象, 参数是图像的大小
       cam = new OpenNI2Interface(Resolution::getInstance().width(),Resolution::getInstance().height());
     }
     else if(type == CameraType::RealSense)
     {
+      // 由于用不到, 暂时不管这里面的具体实现
       std::cout<<"type == CameraType::RealSense"<<std::endl;
       cam = new RealSenseInterface(Resolution::getInstance().width(), Resolution::getInstance().height());
     }

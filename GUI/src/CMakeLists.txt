@@ -30,7 +30,9 @@ message(STATUS "==> Pangolin_INCLUDE_DIRS = " ${Pangolin_INCLUDE_DIRS})
 
 
 find_package(CUDA REQUIRED)
-find_package(OpenNI2 REQUIRED)
+# 下面直接手动包含了
+# find_package(OpenNI2 REQUIRED)
+
 find_package(efusion REQUIRED)
 find_package(SuiteSparse REQUIRED)
 
@@ -50,7 +52,8 @@ include_directories(${EIGEN_INCLUDE_DIRS})
 include_directories(${Pangolin_INCLUDE_DIRS})
 include_directories(${CUDA_INCLUDE_DIRS})
 include_directories(${EFUSION_INCLUDE_DIR})
-include_directories(${OPENNI2_INCLUDE_DIR})
+# include_directories(${OPENNI2_INCLUDE_DIR})
+include_directories("/usr/include/openni2")
 
 
 # HACK 
@@ -112,11 +115,23 @@ target_link_libraries(ElasticFusion
                       ${CUDA_LIBRARIES}
                       ${EXTRA_LIBS}
                       ${EFUSION_LIBRARY}
-                      ${OPENNI2_LIBRARY}
+                      # ${OPENNI2_LIBRARY}
+                      "/home/guoqing/software/OpenNI2_other/baidwangpan/OpenNI-Linux-x64-2.2/Tools/libOpenNI2.so"
                       ${SUITESPARSE_LIBRARIES}
                       ${BLAS_LIBRARIES}
                       ${LAPACK_LIBRARIES}
 )
+
+message(STATUS "==> EXTRA_WINDOWS_LIBS = " ${EXTRA_WINDOWS_LIBS})
+message(STATUS "==> ZLIB_LIBRARY = " ${ZLIB_LIBRARY})
+message(STATUS "==> Pangolin_LIBRARIES = " ${Pangolin_LIBRARIES})
+message(STATUS "==> CUDA_LIBRARIES = " ${CUDA_LIBRARIES})
+message(STATUS "==> EXTRA_LIBS = " ${EXTRA_LIBS})
+message(STATUS "==> EFUSION_LIBRARY = " ${EFUSION_LIBRARY})
+message(STATUS "==> SUITESPARSE_LIBRARIES = " ${SUITESPARSE_LIBRARIES})
+message(STATUS "==> BLAS_LIBRARIES = " ${BLAS_LIBRARIES})
+message(STATUS "==> LAPACK_LIBRARIES = " ${LAPACK_LIBRARIES})
+
 
 INSTALL(TARGETS ElasticFusion
         RUNTIME DESTINATION bin

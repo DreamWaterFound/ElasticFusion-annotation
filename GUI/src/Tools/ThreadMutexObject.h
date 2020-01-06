@@ -1,3 +1,14 @@
+/**
+ * @file ThreadMutexObject.h
+ * @author guoqing (1337841346@qq.com)
+ * @brief 疑似是用于执行互斥锁相关功能的模板类
+ * @version 0.1
+ * @date 2020-01-04
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *

@@ -1,3 +1,14 @@
+/**
+ * @file OpenNI2Interface.h
+ * @author guoqing (1337841346@qq.com)
+ * @brief OpenNI的相机接口
+ * @version 0.1
+ * @date 2020-01-04
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -19,22 +30,35 @@
 #ifndef OPENNI2INTERFACE_H_
 #define OPENNI2INTERFACE_H_
 
+// 和OpenNI相关的头文件
 #include <OpenNI.h>
 #include <PS1080.h>
+
+
 #include <string>
 #include <iostream>
 #include <algorithm>
 #include <map>
 
+// 增强的互斥锁类
 #include "ThreadMutexObject.h"
+// 相机接口虚基类
 #include "CameraInterface.h"
 
+/** @brief OpenNI 的相机接口 */
 class OpenNI2Interface : public CameraInterface
 {
     public:
+        /**
+         * @brief 构造函数
+         * @param[in] inWidth 图像宽度
+         * @param[in] inHeight 图像高度
+         * @param[in] fps 打开的图像帧率
+         */
         OpenNI2Interface(int inWidth = 640, int inHeight = 480, int fps = 30);
         virtual ~OpenNI2Interface();
 
+        /// 图像的大小和帧率
         const int width, height, fps;
 
         void printModes();
@@ -163,7 +187,9 @@ class OpenNI2Interface : public CameraInterface
         RGBCallback * rgbCallback;
         DepthCallback * depthCallback;
 
+        // 标记是否初始化成功了
         bool initSuccessful;
+        // 缓存操作 OpenNI 接口过程中的错误提示信息
         std::string errorText;
 
         //For removing tabs from OpenNI's error messages

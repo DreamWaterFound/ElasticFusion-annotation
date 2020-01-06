@@ -1,3 +1,14 @@
+/**
+ * @file OpenNI2Interface.cpp
+ * @author guoqing (1337841346@qq.com)
+ * @brief OpenNI 的相机接口
+ * @version 0.1
+ * @date 2020-01-04
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -24,7 +35,8 @@ OpenNI2Interface::OpenNI2Interface(int inWidth, int inHeight, int fps)
    fps(fps),
    initSuccessful(true)
 {
-    //Setup
+    // step 0 Setup
+    // 用于保存后面各个 OpenNI 操作的状态
     openni::Status rc = openni::STATUS_OK;
 
     const char * deviceURI = openni::ANY_DEVICE;
@@ -35,11 +47,14 @@ OpenNI2Interface::OpenNI2Interface(int inWidth, int inHeight, int fps)
 
     if(errorString.length() > 0)
     {
+        // 真的出现了错误
         errorText.append(errorString);
         initSuccessful = false;
     }
     else
     {
+        // 上述操作一切顺利
+        // step 1 打开设备
         rc = device.open(deviceURI);
         if (rc != openni::STATUS_OK)
         {

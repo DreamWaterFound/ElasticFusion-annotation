@@ -1,3 +1,14 @@
+/**
+ * @file LiveLogReader.h
+ * @author guoqing (1337841346@qq.com)
+ * @brief 读取实时传感器数据
+ * @version 0.1
+ * @date 2020-01-04
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -16,6 +27,7 @@
  *
  */
 
+
 #ifndef LIVELOGREADER_H_
 #define LIVELOGREADER_H_
 
@@ -33,14 +45,26 @@
 #include "LogReader.h"
 #include "CameraInterface.h"
 
+/** @brief 读取实时数据的类 */
 class LiveLogReader : public LogReader
 {
 	public:
+    /**
+     * @brief 摄像头类型就两种, OpenNI支持的系列, 以及Realsense系列
+     * 
+     */
     enum CameraType
     {
       OpenNI2,RealSense
     };
 
+  /**
+   * @brief 构造函数
+   * 
+   * @param[in] file         记录文件, 这里实际上只用于构造父类对象, 并没有真正使用
+   * @param[in] flipColors   是否左右翻转图像
+   * @param[in] type         摄像头的类型
+   */
 		LiveLogReader(std::string file, bool flipColors, CameraType type);
 
 		virtual ~LiveLogReader();
@@ -78,8 +102,8 @@ class LiveLogReader : public LogReader
 		CameraInterface * cam;
 
 	private:
-		int64_t lastFrameTime;
-		int lastGot;
+		int64_t lastFrameTime;      /// ? 上一帧的时间戳?
+		int lastGot;                /// ? 
 };
 
 #endif /* LIVELOGREADER_H_ */

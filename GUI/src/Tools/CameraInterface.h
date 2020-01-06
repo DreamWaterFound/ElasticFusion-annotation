@@ -1,3 +1,14 @@
+/**
+ * @file CameraInterface.h
+ * @author guoqing (1337841346@qq.com)
+ * @brief 相机接口虚基类
+ * @version 0.1
+ * @date 2020-01-04
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 #pragma once
 
 #include <string>
@@ -5,11 +16,16 @@
 #include <algorithm>
 #include <map>
 
+// ?
 #include "ThreadMutexObject.h"
 
+/** @brief 相机接口虚基类 */
 class CameraInterface
 {
     public:
+      // 使用默认构造函数
+
+      
       virtual ~CameraInterface() {}
 
       virtual bool ok() = 0;
