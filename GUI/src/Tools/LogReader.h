@@ -90,12 +90,12 @@ class LogReader
 
         virtual void setAuto(bool value) = 0;
 
-        bool flipColors;                ///< 是否左右翻转图像
-        int64_t timestamp;              ///? 起始时间戳?
+        bool flipColors;                    ///< 是否左右翻转图像
+        int64_t timestamp;                  ///? 起始时间戳?
 
-        unsigned short * depth;         ///?
-        unsigned char * rgb;            ///?
-        int currentFrame;               ///?
+        unsigned short * depth;             ///?
+        unsigned char * rgb;                ///?
+        int currentFrame;                   ///< 当前帧的计数
 
     protected:
         Bytef * decompressionBufferDepth;   ///? 目测是解压得到深度图像缓存的地方
@@ -106,11 +106,11 @@ class LogReader
         int32_t imageSize;
 
         const std::string file;             ///< 记录文件的路径
-        FILE * fp;                          ///< C 风格的文件指针
-        int32_t numFrames;          ///< 记录文件中帧的个数
-        int width;                  ///< 输入图像的宽度
-        int height;                 ///< 输入图像的高度
-        int numPixels;              ///< 输入图像的像素数目
+        FILE * fp;                          ///< C 风格的文件指针, 用于指向打开的记录文件
+        int32_t numFrames;                  ///< 记录文件中帧的个数
+        int width;                          ///< 输入图像的宽度
+        int height;                         ///< 输入图像的高度
+        int numPixels;                      ///< 输入图像的像素数目
 
         JPEGLoader jpeg;
 };

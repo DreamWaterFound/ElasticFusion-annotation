@@ -11,7 +11,7 @@
                 "/usr/local/cuda-10.0/include",
                 "/home/guoqing/libraries/eigen_333/include/eigen3"
             ],
-            "defines": [],
+            "defines": ["USE_OPENNI_PANGOLIN"],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "c11",
             "cppStandard": "c++17",

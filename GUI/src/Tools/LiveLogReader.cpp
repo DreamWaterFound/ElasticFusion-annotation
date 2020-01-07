@@ -156,6 +156,8 @@ void LiveLogReader::getNext()
     }
 }
 
+// 获取记录文件路径, 但是对于实时运行的摄像头而言, 这里就直接返回:
+// "当前路径+live"
 const std::string LiveLogReader::getFile()
 {
     return Parse::get().baseDir().append("live");
@@ -166,6 +168,7 @@ int LiveLogReader::getNumFrames()
     return std::numeric_limits<int>::max();
 }
 
+// 对于实时的摄像头, 数据是永远都会有的, 一直返回 true
 bool LiveLogReader::hasMore()
 {
     return true;

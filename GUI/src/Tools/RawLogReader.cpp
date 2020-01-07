@@ -178,26 +178,33 @@ int RawLogReader::getNumFrames()
     return numFrames;
 }
 
+// 判断记录文件中的内容是否已经读取完毕
 bool RawLogReader::hasMore()
 {
     return currentFrame + 1 < numFrames;
 }
 
-
+// 重新设置记录文件
 void RawLogReader::rewind()
 {
+    // 如果文件指针堆栈不为空, 就删除
     if (filePointers.size() != 0)
     {
+        // ? 我日? 这tm是啥操作啊, 删除吗?
         std::stack<int> empty;
         std::swap(empty, filePointers);
     }
 
+    // 关闭之前已经打开过的记录文件并重新打开
+
     fclose(fp);
     fp = fopen(file.c_str(), "rb");
 
+    // 读取记录文件中的帧数, 如果为0则触发断言错误
     auto tmp = fread(&numFrames,sizeof(int32_t),1,fp);
     assert(tmp);
 
+    // 复位当前帧id
     currentFrame = 0;
 }
 
@@ -206,6 +213,7 @@ bool RawLogReader::rewound()
     return filePointers.size() == 0;
 }
 
+// 获取记录文件路径
 const std::string RawLogReader::getFile()
 {
     return file;

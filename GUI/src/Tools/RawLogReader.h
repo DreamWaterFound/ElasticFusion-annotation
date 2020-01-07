@@ -65,19 +65,25 @@ class RawLogReader : public LogReader
 
         int getNumFrames();
 
+        /* @brief 判断记录文件中的内容是否已经读取完毕 */
         bool hasMore();
 
         bool rewound();
 
+        /** @brief 重新读取记录文件 */
         void rewind();
 
         void fastForward(int frame);
 
+        /**
+         * @brief 获取记录文件路径
+         * @return const std::string 记录文件路径
+         */
         const std::string getFile();
 
         void setAuto(bool value);
 
-        std::stack<int> filePointers;
+        std::stack<int> filePointers;               ///? 不知道存储啥的文件指针的堆栈
 
     private:
         void getCore();

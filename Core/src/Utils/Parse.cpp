@@ -86,18 +86,24 @@ std::string Parse::shaderDir() const
     return currentVal;
 }
 
+// 获取当前程序运行的基路径(可执行文件所在的路径, 除去 build)
 std::string Parse::baseDir() const
 {
     char buf[256];
 #ifdef WIN32
     int length = GetModuleFileName(NULL,buf,sizeof(buf));
 #else
+    // linux
+    // 获取当前程序的运行名称(含路径). readlink()是boost提供的函数. 关于神奇的 /proc 目录:
+    // ref:[https://www.cnblogs.com/liushui-sky/p/9354536.html]
     int length = readlink("/proc/self/exe",buf,sizeof(buf));
 #endif
+
     std::string currentVal;
     currentVal.append((char *)&buf, length);
 
     currentVal = currentVal.substr(0, currentVal
+    // windows 和 linux 下的斜杠不同, 这里的目的是删去 build 后的目录
 #ifdef WIN32
       .rfind("\\build\\"));
 #else

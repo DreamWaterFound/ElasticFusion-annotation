@@ -93,10 +93,14 @@ class Parse
 
         /**
          * @brief 获取着色器程序的存放路径
-         * @return EFUSION_API shaderDir 路径
+         * @return shaderDir 路径
          */
         EFUSION_API std::string shaderDir() const;
 
+        /**
+         * @brief 获取当前程序的运行目录, 除去了build的那种
+         * @return baseDir 路径
+         */
         EFUSION_API std::string baseDir() const;
 
     private:

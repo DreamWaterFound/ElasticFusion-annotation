@@ -955,6 +955,7 @@ const bool & ElasticFusion::getLost() //lel
     return lost;
 }
 
+// 获取当前处理过的帧数, 其实就是 ElasticFusion 系统处理图像的时间戳
 const int & ElasticFusion::getTick()
 {
     return tick;

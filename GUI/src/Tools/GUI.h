@@ -299,14 +299,21 @@ class GUI
             delete colorTexture;
         }
 
+        /** @brief 在绘制 MaoViewer 之前准备 */
         void preCall()
         {
+            // ! 不太建议的代码技巧...  
+            // 这里的原意是如果处于 showcaseMode 模式(MapViewer全屏)那么窗口的背景就要填充黑色, 否则则填充蓝色
             glClearColor(0.05 * !showcaseMode, 0.05 * !showcaseMode, 0.3 * !showcaseMode, 0.0f);
+            // GL_COLOR_BUFFER_BIT: 清除之前绘制的像素信息缓冲, 否则显示内容就会每一帧叠加在一起
+            // GL_DEPTH_BUFFER_BIT: 清除之间绘制的深度缓冲, 否则之前绘制帧的时候形成的"遮挡关系"就会一直保存, 导致最终绘制出来的效果出现莫名其妙的遮挡
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+            
+            // 更新当前窗口的高度和宽度
             width = pangolin::DisplayBase().v.w;
             height = pangolin::DisplayBase().v.h;
 
+            // 激活要绘制的 MapViewer 区域
             pangolin::Display("cam").Activate(s_cam);
         }
 
@@ -464,8 +471,8 @@ class GUI
         }
 
         bool showcaseMode;                                  ///< 是否 MapViewer 部分全屏
-        int width;                                          ///< 窗口宽度
-        int height;                                         ///< 窗口高度
+        int width;                                          ///< 窗口宽度, 这个是可以在 preCall() 函数中被更新的
+        int height;                                         ///< 窗口高度, 这个是可以在 preCall() 函数中被更新的
         int panel;                                          ///< 面板宽度
 
         // Panel 上的变量 - 选项

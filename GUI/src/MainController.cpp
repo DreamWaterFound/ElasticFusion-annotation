@@ -125,7 +125,7 @@ MainController::MainController(int argc, char * argv[])
 
     // 是否命令行参数中指定了 -nso , 如果指定了结果为 false
     so3 = !(Parse::get().arg(argc, argv, "-nso", empty) > -1);
-    // ? 什么的边界?
+    // ? 什么的边界? 帧数的？ 
     end = std::numeric_limits<unsigned short>::max(); // Funny bound, since we predict times in this format really!
 
     // 从命令行参数中更新这些数值
@@ -139,7 +139,7 @@ MainController::MainController(int argc, char * argv[])
     Parse::get().arg(argc, argv, "-t", timeDelta);
     Parse::get().arg(argc, argv, "-ic", icpCountThresh);
     Parse::get().arg(argc, argv, "-s", start);
-    Parse::get().arg(argc, argv, "-e", end);
+    Parse::get().arg(argc, argv, "-e", end);                // ? 指定处理的帧数最大值?
 
     // 从命令行参数得到是否需要对图像进行翻转
     logReader->flipColors = Parse::get().arg(argc, argv, "-f", empty) > -1;
@@ -149,9 +149,9 @@ MainController::MainController(int argc, char * argv[])
     openLoop        = !groundTruthOdometry && Parse::get().arg(argc, argv, "-o", empty) > -1;       //? 是否开环
     reloc           = Parse::get().arg(argc, argv, "-rl", empty) > -1;                              //? 是否重定位
     frameskip       = Parse::get().arg(argc, argv, "-fs", empty) > -1;                              //? 是否跳帧
-    quiet           = Parse::get().arg(argc, argv, "-q", empty) > -1;                               // 安静模式
+    quiet           = Parse::get().arg(argc, argv, "-q", empty) > -1;                               //? 安静模式? 数据文件读取完成之后直接退出?
     fastOdom        = Parse::get().arg(argc, argv, "-fo", empty) > -1;                              // 纯里程计模式
-    rewind          = Parse::get().arg(argc, argv, "-r", empty) > -1;                               // ?
+    rewind          = Parse::get().arg(argc, argv, "-r", empty) > -1;                               // 对于数据记录文件是否循环读取(播放)
     frameToFrameRGB = Parse::get().arg(argc, argv, "-ftf", empty) > -1;                             // Frame to frame 的工作方式
 
     // step 4 初始化 GUI 界面
@@ -177,6 +177,7 @@ MainController::MainController(int argc, char * argv[])
                               Resolution::getInstance().height() / 2);
 }
 
+// 析构函数, 就是释放各个 new 出来的资源
 MainController::~MainController()
 {
     if(eFusion)
@@ -230,61 +231,82 @@ void MainController::loadCalibration(const std::string & filename)
     Intrinsics::getInstance(fx, fy, cx, cy);
 }
 
+// 运行
 void MainController::launch()
 {
+    // 只在前面的准备工作都成功的时候才会执行.
     while(good)
     {
+        // 如果已经创建了 ElasticFusion 对象， 那么那就正常运行吧
         if(eFusion)
         {
             run();
         }
 
+        // 如果没有创建 ElasticFusion 对象， 或者是复位按钮被按下
         if(eFusion == 0 || resetButton)
         {
+            // 复位标志复位
             resetButton = false;
 
+            // 如果已经构造了 efusion, 那么我们就删除再重新建立它
             if(eFusion)
             {
                 delete eFusion;
             }
 
+            // 重新读取记录文件, 如果是跑实时的摄像头呢下面的函数是空的
             logReader->rewind();
-            eFusion = new ElasticFusion(openLoop ? std::numeric_limits<int>::max() / 2 : timeDelta,
-                                        icpCountThresh,
-                                        icpErrThresh,
-                                        covThresh,
-                                        !openLoop,
-                                        iclnuim,
-                                        reloc,
-                                        photoThresh,
-                                        confidence,
-                                        depth,
-                                        icp,
-                                        fastOdom,
-                                        fernThresh,
-                                        so3,
-                                        frameToFrameRGB,
-                                        logReader->getFile());
+            // 重新构建 ElasticFusion
+            eFusion = new ElasticFusion(
+                openLoop ? std::numeric_limits<int>::max() / 2 : timeDelta,     // ? 下面的都需要补充
+                icpCountThresh,
+                icpErrThresh,                                                   // ? ICP 迭代误差的最小值的阈值?
+                covThresh,
+                !openLoop,
+                iclnuim,                                                        // 命令行中是否指定了参数 -icl
+                reloc,                                                          // ? 是否使能了重定位
+                photoThresh,
+                confidence,
+                depth,                                                          // 深度切断值
+                icp,
+                fastOdom,                                                       // 是否工作于纯里程计模式
+                fernThresh,
+                so3,
+                frameToFrameRGB,
+                logReader->getFile());                                          // 记录文件的位置, 对于实时摄像头来说是 basedir/live
         }
         else
         {
+            // 运行到这里, 说明 eFusion!=0 并且 resetButton = false. 只能够说明是用户退出了
             break;
         }
 
     }
 }
 
+// 主循环, 实现给 ElasticFusion Core 喂图像的工作
 void MainController::run()
 {
-    while(!pangolin::ShouldQuit() && !((!logReader->hasMore()) && quiet) && !(eFusion->getTick() == end && quiet))
+    // Main loop
+    while(!pangolin::ShouldQuit()                       // 终止条件1: Pangolin 窗口收到了退出信息 (比如按下ESC)
+          && !((!logReader->hasMore()) && quiet)        // 终止条件2: 如果 quiet 有效, 并且记录文件已经读取完成了 // ? 但是这里的quiet是干嘛的? 
+          && !(eFusion->getTick() == end && quiet))     // 终止条件3: 如果 quiet 有效, 并且也在给定的处理的图像帧数范围内 // ?
     {
+        
         if(!gui->pause->Get() || pangolin::Pushed(*gui->step))
         {
-            if((logReader->hasMore() || rewind) && eFusion->getTick() < end)
+            // 如果没有暂停, 并且也没有处于步进模式的话
+            if((logReader->hasMore() || rewind)         // 喂图像条件1: 如果记录文件中还有数据(对live的相机来说一直成立), 如果没有数据的话, 之前设置了数据记录文件循环读取也行
+                && eFusion->getTick() < end)            // 喂图像条件2: 如果 ElasticFusion 处理的图像数量在预想的范围内
             {
+                // 开始统计 日志文件读取(LogRead) 所耗费的时间
                 TICK("LogRead");
+
+                // HERE
                 if(rewind)
                 {
+                    // 如果设置了数据记录文件要反复读取
                     if(!logReader->hasMore())
                     {
                         logReader->getBack();
@@ -344,13 +366,18 @@ void MainController::run()
         }
         else
         {
+            // 如果处于暂停或者是步进模式下, 那么就只 predict 模型的图像
             eFusion->predict();
         }
 
+
+        // TODO 看上去和调试有关
         TICK("GUI");
 
+        
         if(gui->followPose->Get())
         {
+            // 如果选择了使用相机当前的位姿进行观测
             pangolin::OpenGlMatrix mv;
 
             Eigen::Matrix4f currPose = eFusion->getCurrPose();
@@ -384,6 +411,7 @@ void MainController::run()
             gui->s_cam.SetModelViewMatrix(mv);
         }
 
+        // 进行绘制 MapViewer 的准备工作, 主要是清空各种缓冲区, 并且激活模型的绘制区域
         gui->preCall();
 
         std::stringstream stri;

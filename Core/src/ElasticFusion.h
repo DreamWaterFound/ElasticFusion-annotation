@@ -79,6 +79,7 @@ class ElasticFusion
          * Predicts the current view of the scene, updates the [vertex/normal/image]Tex() members
          * of the indexMap class
          */
+        // TODO 更改这里注释的格式
         EFUSION_API void predict();
 
         /**
@@ -286,7 +287,7 @@ class ElasticFusion
 
         Eigen::Matrix4f currPose;
 
-        int tick;
+        int tick;                           ///< 当前处理过的帧数, 也是处理的图像的时间戳
         const int timeDelta;
         const int icpCountThresh;
         const float icpErrThresh;

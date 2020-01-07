@@ -27,12 +27,18 @@
  *
  */
 
+// ElasticFusion 对象
 #include <ElasticFusion.h>
+// 命令行参数解析
 #include <Utils/Parse.h>
 
+// GUI 界面
 #include "Tools/GUI.h"
+// 加载真值比较用的
 #include "Tools/GroundTruthOdometry.h"
+// 数据源Base
 #include "Tools/RawLogReader.h"
+// 实时摄像头数据
 #include "Tools/LiveLogReader.h"
 
 #ifndef MAINCONTROLLER_H_
@@ -49,13 +55,14 @@ class MainController
          */
         MainController(int argc, char * argv[]);
 
-        // ? 还有向下兼容的可能?
+        /** @brief 析构函数 */
         virtual ~MainController();
 
         /** @brief 运行 */
         void launch();
 
     private:
+        /* @brief 主循环, 实现给 ElasticFusion 喂图像的工作 */
         void run();
 
         /**
@@ -65,7 +72,7 @@ class MainController
         void loadCalibration(const std::string & filename);
 
         bool good;                  ///< 当前是否已经正确地初始化数据源了
-        ElasticFusion * eFusion;
+        ElasticFusion * eFusion;    ///< ElasticFusion Core 对象指针
         GUI * gui;                  ///< GUI 窗口对象
         GroundTruthOdometry * groundTruthOdometry;      ///< 轨迹真值文件对象句柄
         LogReader * logReader;      ///< 记录文件读取器的句柄, 根据情况也会是实时相机的接口
@@ -75,7 +82,7 @@ class MainController
         std::string poseFile;       ///< 命令行参数中指定的真值文件
 
         float confidence,           ///? 什么的置信度?
-              depth,                ///< 深度切断值
+              depth,                ///< 深度切断值. 这个值是考虑到过远的深度值测量不准确, 误差较大, 所以直接将距离相机过远的深度值"切掉",我们直接不用了
               icp,                  ///?
               icpErrThresh,         ///? ICP 迭代误差的最小阈值?
               covThresh,            ///?
@@ -85,23 +92,23 @@ class MainController
         int timeDelta,              ///?
             icpCountThresh,         ///?
             start,                  ///?
-            end;                    ///?
+            end;                    ///? 疑似是设置的处理的帧数的最大值
 
         bool fillIn,
              openLoop,              ///? 是否以开环模式运行
              reloc,                 ///? 是否使能重定位
              frameskip,             ///? 跳帧?
-             quiet,                 ///< 是否安静模式
+             quiet,                 ///? 是否安静模式? 但是感觉又参与到了程序的结束, 如果记录文件读取完毕, 这个为真, 那么就直接退出了
              fastOdom,              ///< 是否纯里程计模式
              so3,                   ///? 和命令行参数中是否指定 -nso 参数有关系
-             rewind,                ///?
+             rewind,                ///< 设置数据记录文件是否需要反复循环读取
              frameToFrameRGB;       ///? 是否使用 Frame to Frame 工作模式
 
         int framesToSkip;
         bool streaming;
-        bool resetButton;
+        bool resetButton;           ///< 复位请求
 
-        Resize * resizeStream;
+        Resize * resizeStream;      ///< 使用 Shader 对原始图像进行降采样的对象
 };
 
 #endif /* MAINCONTROLLER_H_ */

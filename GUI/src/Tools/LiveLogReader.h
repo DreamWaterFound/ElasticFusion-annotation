@@ -73,6 +73,7 @@ class LiveLogReader : public LogReader
 
         int getNumFrames();
 
+        /* @brief 对于实时的摄像头, 数据是永远都会有的, 一直返回 true */
         bool hasMore();
 
         bool rewound()
@@ -80,10 +81,8 @@ class LiveLogReader : public LogReader
             return false;
         }
 
-        void rewind()
-        {
-
-        }
+        /* @brief 如果是跑实际的摄像头, 就没有必要重新读取记录文件了, 这里设置为空操作 */
+        void rewind(){ }
 
         void getBack()
         {
@@ -95,6 +94,10 @@ class LiveLogReader : public LogReader
 
         }
 
+        /**
+         * @brief 获取记录文件路径
+         * @return const std::string 不过对于实时摄像头而言, 返回的是当前的基路径+"live"
+         */
         const std::string getFile();
 
         void setAuto(bool value);
