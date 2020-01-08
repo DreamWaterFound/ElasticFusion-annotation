@@ -62,8 +62,17 @@ class GroundTruthOdometry
         /** @brief 析构函数 */
         virtual ~GroundTruthOdometry();
 
+        /**
+         * @brief 获取指定时间戳时, 相机位姿 Tcw
+         * @param[in] timestamp 给定时间戳 // ? 单位?
+         * @return Eigen::Matrix4f Tcw
+         */
         Eigen::Matrix4f getTransformation(uint64_t timestamp);
 
+        /**
+         * @brief 获取位姿真值的协方差, 恒对角阵
+         * @return Eigen::MatrixXd 协方差矩阵
+         */
         Eigen::MatrixXd getCovariance();
 
     private:
@@ -83,7 +92,7 @@ class GroundTruthOdometry
                 > camera_trajectory;        ///< 保存相机位姿的 vector
 
 
-        uint64_t last_utime;                ///? 最近的什么时间戳?
+        uint64_t last_utime;                ///< 上一次查询的时间戳
 };
 
 #endif /* GROUNDTRUTHODOMETRY_H_ */

@@ -30,12 +30,18 @@
 #ifndef RAWLOGREADER_H_
 #define RAWLOGREADER_H_
 
+// 分辨率对象
 #include <Utils/Resolution.h>
+// 时间统计对象
 #include <Utils/Stopwatch.h>
+
+// Pangolin
 #include <pangolin/utils/file_utils.h>
 
+// 父类
 #include "LogReader.h"
 
+// C & C++ STL
 #include <cassert>
 #include <zlib.h>
 #include <iostream>
@@ -44,8 +50,7 @@
 #include <stack>
 
 
-/** @brief 原始记录文件读取器 */
-// ? 这个读取器和父类有什么不同?
+/** @brief 原始记录文件读取器, 这个读取器负责读取原始记录文件 */
 class RawLogReader : public LogReader
 {
     public:
@@ -57,22 +62,37 @@ class RawLogReader : public LogReader
          */
         RawLogReader(std::string file, bool flipColors);
 
+        /** @brief  析构函数, 释放缓冲区内容, 关闭文件 */
         virtual ~RawLogReader();
 
+        /** @brief 获取下一帧图像数据, 保存到缓冲区中 */
         void getNext();
 
+        /** @brief 设置文件指针返回到上一帧图像开始的位置 */
         void getBack();
 
+        /**
+         * @brief 获取获取记录文件中的帧的个数
+         * @return int 帧的个数
+         */
         int getNumFrames();
 
         /* @brief 判断记录文件中的内容是否已经读取完毕 */
         bool hasMore();
 
+        /**
+         * @brief 判断是否需要倒带 -- 即记录文件倒序播放到头后, 再正序播放
+         * @return 是否
+         */
         bool rewound();
 
-        /** @brief 重新读取记录文件 */
+        /** @brief 重新设置记录文件的读取 */
         void rewind();
 
+        /**
+         * @brief 快进到第 frame 帧
+         * @param[in] frame 要快进到的帧id
+         */
         void fastForward(int frame);
 
         /**
@@ -81,11 +101,16 @@ class RawLogReader : public LogReader
          */
         const std::string getFile();
 
+        /**
+         * @brief // ? 自动曝光/白平衡参数设置? 对于记录文件无法设置, 空函数
+         * @param[in] value // ?
+         */
         void setAuto(bool value);
 
-        std::stack<int> filePointers;               ///? 不知道存储啥的文件指针的堆栈
+        std::stack<int> filePointers;               ///< 存储每一帧图像的数据相对于文件头部的偏移量
 
     private:
+        /** @brief 获取真正的帧数据到缓冲区中 */
         void getCore();
 };
 

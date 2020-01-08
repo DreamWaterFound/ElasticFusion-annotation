@@ -117,6 +117,17 @@ typedef unsigned char stopwatchPacketType;
 
 #endif
 
+/* 数据包:
+ *  +4  unsigned char*4         数据包的大小(算当前)
+ *  +8  unsigned long long int  signature // ?
+ *  +?  字符串描述+\0
+ *  +8  float                   耗费的时间
+ *  +?  字符串描述+\0
+ *  +8  float                   耗费的时间
+ * ...
+ */
+
+
 /* @brief 模块运行计时统计的模块 */
 class Stopwatch
 {

@@ -41,9 +41,12 @@
 #ifndef WIN32
 #  include <poll.h>
 #endif
-#include <Utils/Img.h>
+
+// 这个文件并不是必要的
+// #include <Utils/Img.h>
 #include <Utils/Resolution.h>
 
+// JPEG 解码器支持
 #include "JPEGLoader.h"
 
 /** @brief 记录文件读取器 */
@@ -53,7 +56,7 @@ class LogReader
         /**
          * @brief 构造函数
          * @param[in] file 记录文件路径
-         * @param[in] flipColors 是否翻转图像
+         * @param[in] flipColors 是否翻转图像RGB/BGR
          */
         LogReader(std::string file, bool flipColors)
          : flipColors(flipColors),
@@ -69,41 +72,70 @@ class LogReader
            numPixels(width * height)
         {}
 
+        /** @brief 空析构函数, 由子类实现 */
         virtual ~LogReader()
         {}
 
+        /** @brief 正序获取下一帧的图像数据, 保存在缓冲区中 */
         virtual void getNext() = 0;
 
+        /** 
+         * @brief 获取当前记录文件中的帧数
+         * @return int 帧数
+         */
         virtual int getNumFrames() = 0;
 
+        /**
+         * @brief 记录文件中的帧数据是否全部读取完成
+         * @return 是否
+         */
         virtual bool hasMore() = 0;
 
+        /**
+         * @brief 如果逆序读取, 现在是否已经需要"倒带"转变成为正序读取?
+         * @return true 
+         * @return false 
+         */
         virtual bool rewound() = 0;
 
+        /** @brief 重置整个记录文件读取器 */
         virtual void rewind() = 0;
 
+        /** @brief 倒序读取记录文件 */
         virtual void getBack() = 0;
 
+        /**
+         * @brief 快进到第 frame 帧
+         * @param[in] frame 帧id
+         */
         virtual void fastForward(int frame) = 0;
 
+        /**
+         * @brief 获取记录文件的路径
+         * @return const std::string 路径
+         */
         virtual const std::string getFile() = 0;
 
+        /**
+         * @brief 设置自动曝光/白平衡参数
+         * @param[in] value 是否设置
+         */
         virtual void setAuto(bool value) = 0;
 
-        bool flipColors;                    ///< 是否左右翻转图像
-        int64_t timestamp;                  ///? 起始时间戳?
+        bool flipColors;                    ///< 是否翻转图像 RGB、BGR
+        int64_t timestamp;                  ///< 帧的时间戳, 单位为 ns
 
-        unsigned short * depth;             ///?
-        unsigned char * rgb;                ///?
+        unsigned short * depth;             ///< 可以直接使用的深度图像首地址, 注意和下面的 decompressionBufferDepth 指针数据类型不同
+        unsigned char * rgb;                ///< 可以直接使用的彩色图像首地址
         int currentFrame;                   ///< 当前帧的计数
 
     protected:
-        Bytef * decompressionBufferDepth;   ///? 目测是解压得到深度图像缓存的地方
-        Bytef * decompressionBufferImage;   ///? 目测是解压得到彩色图像缓存的地方
-        unsigned char * depthReadBuffer;    ///< 读取深度图像的时候, 一张图像的缓冲区头指针
-        unsigned char * imageReadBuffer;    ///< 读取彩色图像的时候, 一张图像的缓冲区头指针
-        int32_t depthSize;
-        int32_t imageSize;
+        Bytef * decompressionBufferDepth;   ///< 解压缩后可以直接使用的深度图像
+        Bytef * decompressionBufferImage;   ///< 解压缩后可以直接使用的深度图像
+        unsigned char * depthReadBuffer;    ///< 从外部文件中读取到的深度图像数据将会被暂时存储到这里
+        unsigned char * imageReadBuffer;    ///< 从外部文件中读取到的彩色图像数据将会被暂时存储到这里
+        int32_t depthSize;                  ///< 深度图像的数据长度(byte)
+        int32_t imageSize;                  ///< 彩色图像的数据长度(byte)
 
         const std::string file;             ///< 记录文件的路径
         FILE * fp;                          ///< C 风格的文件指针, 用于指向打开的记录文件
@@ -112,7 +144,7 @@ class LogReader
         int height;                         ///< 输入图像的高度
         int numPixels;                      ///< 输入图像的像素数目
 
-        JPEGLoader jpeg;
+        JPEGLoader jpeg;                    ///< Jpeg 编解码器
 };
 
 #endif /* LOGREADER_H_ */

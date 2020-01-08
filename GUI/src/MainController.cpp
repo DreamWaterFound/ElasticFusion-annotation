@@ -33,21 +33,20 @@
 // 构造函数
 MainController::MainController(int argc, char * argv[])
  : 
-   // ? 下面的 这些目前还意义不明
-   good(true),
-   eFusion(0),
-   gui(0),
-   groundTruthOdometry(0),
-   logReader(0),
-   framesToSkip(0),
-   resetButton(false),
-   resizeStream(0)
+   good(true),                      // 是否正确初始化
+   // ! 其实下面的指针初始值设置为 nullptr 比较好
+   eFusion(0),                      // EasticFusion Core 对象指针
+   gui(0),                          // GUI 窗口对象指针
+   groundTruthOdometry(0),          // 处理位姿轨迹真值的对象(当然位姿真值从外部输入的)
+   logReader(0),                    // 数据源
+   framesToSkip(0),                 // ?  是否
+   resetButton(false),              // 复位按钮是否被按下
+   resizeStream(0)                  // Resize 器, 借助 GPU Shader 实现
 {
     // step 0 解析命令行参数
     // 这个变量用于缓存后面多个参数的内容
     std::string empty;
-    // 如果找到了, 返回值>=0; 反之找不到
-    // ? 这个变量好像一直没有被用到?
+    // 如果找到了, 返回值>=0; 反之找不到. 这个标志是读取 ICL-NUIM 数据集的时候使用的
     iclnuim = Parse::get().arg(argc, argv, "-icl", empty) > -1;
 
     // 解析相机参数文件
@@ -110,49 +109,49 @@ MainController::MainController(int argc, char * argv[])
         groundTruthOdometry = new GroundTruthOdometry(poseFile);
     }
 
-    // step 3 初始化一些参数
-    confidence      = 10.0f;                //? 需要完善补充注释
-    depth           = 3.0f;
-    icp             = 10.0f;
-    icpErrThresh    = 5e-05;
-    covThresh       = 1e-05;
-    photoThresh     = 115;
-    fernThresh      = 0.3095f;
+    // step 3 初始化参数
+    confidence      = 10.0f;                // Surfel confidence threshold
+    depth           = 3.0f;                 // 深度切断值
+    icp             = 10.0f;                // Relative ICP/RGB tracking weight
+    icpErrThresh    = 5e-05;                // Local loop closure residual threshold
+    covThresh       = 1e-05;                // Local loop closure covariance threshold
+    photoThresh     = 115;                  // Global loop closure photometric threshold
+    fernThresh      = 0.3095f;              // Fern encoding threshold
 
-    timeDelta       = 200;
-    icpCountThresh  = 40000;
-    start           = 1;
+    timeDelta       = 200;                  // Time window length
+    icpCountThresh  = 40000;                // Local loop closure inlier threshold
+    start           = 1;                    // Frames to skip at start of log, 默认就是从第一帧开始处理
 
-    // 是否命令行参数中指定了 -nso , 如果指定了结果为 false
+    // 是否命令行参数中指定了 -nso , 如果指定了结果为 false; Disables SO(3) pre-alignment in tracking
     so3 = !(Parse::get().arg(argc, argv, "-nso", empty) > -1);
     // ? 什么的边界? 帧数的？ 
     end = std::numeric_limits<unsigned short>::max(); // Funny bound, since we predict times in this format really!
 
     // 从命令行参数中更新这些数值
-    Parse::get().arg(argc, argv, "-c", confidence);
+    Parse::get().arg(argc, argv, "-c", confidence);         // Surfel confidence threshold
     Parse::get().arg(argc, argv, "-d", depth);              // 深度切断值
-    Parse::get().arg(argc, argv, "-i", icp);
-    Parse::get().arg(argc, argv, "-ie", icpErrThresh);
-    Parse::get().arg(argc, argv, "-cv", covThresh);
-    Parse::get().arg(argc, argv, "-pt", photoThresh);
-    Parse::get().arg(argc, argv, "-ft", fernThresh);
-    Parse::get().arg(argc, argv, "-t", timeDelta);
-    Parse::get().arg(argc, argv, "-ic", icpCountThresh);
-    Parse::get().arg(argc, argv, "-s", start);
-    Parse::get().arg(argc, argv, "-e", end);                // ? 指定处理的帧数最大值?
+    Parse::get().arg(argc, argv, "-i", icp);                // Relative ICP/RGB tracking weight
+    Parse::get().arg(argc, argv, "-ie", icpErrThresh);      // Local loop closure residual threshold
+    Parse::get().arg(argc, argv, "-cv", covThresh);         // Local loop closure covariance threshold // ? 不知道这个协方差是咋定义的
+    Parse::get().arg(argc, argv, "-pt", photoThresh);       // Global loop closure photometric threshold
+    Parse::get().arg(argc, argv, "-ft", fernThresh);        // Fern encoding threshold
+    Parse::get().arg(argc, argv, "-t", timeDelta);          // Time window length
+    Parse::get().arg(argc, argv, "-ic", icpCountThresh);    // Local loop closure inlier threshold
+    Parse::get().arg(argc, argv, "-s", start);              // Frames to skip at start of log
+    Parse::get().arg(argc, argv, "-e", end);                // Cut off frame of log 指定处理的帧的最大id
 
-    // 从命令行参数得到是否需要对图像进行翻转
+    // Flip RGB/BGR
     logReader->flipColors = Parse::get().arg(argc, argv, "-f", empty) > -1;
 
     
     // ! 有个问题, 如果 groundTruthOdometry 并未初始化, 则这个指针可能不是 nullptr
-    openLoop        = !groundTruthOdometry && Parse::get().arg(argc, argv, "-o", empty) > -1;       //? 是否开环
-    reloc           = Parse::get().arg(argc, argv, "-rl", empty) > -1;                              //? 是否重定位
-    frameskip       = Parse::get().arg(argc, argv, "-fs", empty) > -1;                              //? 是否跳帧
-    quiet           = Parse::get().arg(argc, argv, "-q", empty) > -1;                               //? 安静模式? 数据文件读取完成之后直接退出?
-    fastOdom        = Parse::get().arg(argc, argv, "-fo", empty) > -1;                              // 纯里程计模式
-    rewind          = Parse::get().arg(argc, argv, "-r", empty) > -1;                               // 对于数据记录文件是否循环读取(播放)
-    frameToFrameRGB = Parse::get().arg(argc, argv, "-ftf", empty) > -1;                             // Frame to frame 的工作方式
+    openLoop        = !groundTruthOdometry && Parse::get().arg(argc, argv, "-o", empty) > -1;       // ? Open loop mode
+    reloc           = Parse::get().arg(argc, argv, "-rl", empty) > -1;                              // Enable relocalisation
+    frameskip       = Parse::get().arg(argc, argv, "-fs", empty) > -1;                              // Frame skip if processing a log to simulate real-time
+    quiet           = Parse::get().arg(argc, argv, "-q", empty) > -1;                               // Quit when finished a log
+    fastOdom        = Parse::get().arg(argc, argv, "-fo", empty) > -1;                              // Fast odometry (single level pyramid)
+    rewind          = Parse::get().arg(argc, argv, "-r", empty) > -1;                               // Rewind and loop log forever 对于数据记录文件是否循环读取(播放)
+    frameToFrameRGB = Parse::get().arg(argc, argv, "-ftf", empty) > -1;                             // Do frame-to-frame RGB tracking
 
     // step 4 初始化 GUI 界面
     gui = new GUI(
@@ -163,12 +162,12 @@ MainController::MainController(int argc, char * argv[])
     gui->flipColors->Ref().Set(logReader->flipColors);      // 彩色通道翻转
     gui->rgbOnly->Ref().Set(false);                         // ? 仅使用rgb?
     gui->pyramid->Ref().Set(true);                          // 使用图像金字塔
-    gui->fastOdom->Ref().Set(fastOdom);                     // 使用快速视觉里程计模式(不建图)
-    gui->confidenceThreshold->Ref().Set(confidence);        // ?
+    gui->fastOdom->Ref().Set(fastOdom);                     // 使用快速视觉里程计模式()
+    gui->confidenceThreshold->Ref().Set(confidence);        // 设置 Surfel confidence threshold
     gui->depthCutoff->Ref().Set(depth);                     // 深度切断\值
-    gui->icpWeight->Ref().Set(icp);                         // ?
-    gui->so3->Ref().Set(so3);                               // ?
-    gui->frameToFrameRGB->Ref().Set(frameToFrameRGB);       // ? 使用帧-帧RGB信息估计相机位姿?
+    gui->icpWeight->Ref().Set(icp);                         // 设置 Relative ICP/RGB tracking weight
+    gui->so3->Ref().Set(so3);                               // 是否 Disables SO(3) pre-alignment in tracking
+    gui->frameToFrameRGB->Ref().Set(frameToFrameRGB);       // 是否使用 frame-to-frame RGB tracking
 
     // 生成用于将图像从原始图像大小降采样一般的图像缩放对象
     resizeStream = new Resize(Resolution::getInstance().width(),
@@ -259,21 +258,21 @@ void MainController::launch()
             logReader->rewind();
             // 重新构建 ElasticFusion
             eFusion = new ElasticFusion(
-                openLoop ? std::numeric_limits<int>::max() / 2 : timeDelta,     // ? 下面的都需要补充
-                icpCountThresh,
-                icpErrThresh,                                                   // ? ICP 迭代误差的最小值的阈值?
-                covThresh,
-                !openLoop,
-                iclnuim,                                                        // 命令行中是否指定了参数 -icl
-                reloc,                                                          // ? 是否使能了重定位
-                photoThresh,
-                confidence,
+                openLoop ? std::numeric_limits<int>::max() / 2 : timeDelta,     // 如果不使用闭环就没有必要设置时间窗口的长度 // ? 但是这里除2是为什么?
+                icpCountThresh,                                                 // Local loop closure inlier threshold
+                icpErrThresh,                                                   // Local loop closure residual threshold
+                covThresh,                                                      // Local loop closure covariance threshold
+                !openLoop,                                                      // 使用闭环(true) 不使用闭环(false) // ? 指的是全局闭环还是局部闭环?
+                iclnuim,                                                        // 是否使用 ICL-NUIM 数据集
+                reloc,                                                          // 是否使能了重定位
+                photoThresh,                                                    // Global loop closure photometric threshold
+                confidence,                                                     // Surfel confidence threshold
                 depth,                                                          // 深度切断值
-                icp,
+                icp,                                                            // Relative ICP/RGB tracking weight
                 fastOdom,                                                       // 是否工作于纯里程计模式
-                fernThresh,
-                so3,
-                frameToFrameRGB,
+                fernThresh,                                                     // Fern encoding threshold
+                so3,                                                            // Disables SO(3) pre-alignment in tracking
+                frameToFrameRGB,                                                // 是否 Do frame-to-frame RGB tracking
                 logReader->getFile());                                          // 记录文件的位置, 对于实时摄像头来说是 basedir/live
         }
         else
@@ -290,10 +289,10 @@ void MainController::run()
 {
     // Main loop
     while(!pangolin::ShouldQuit()                       // 终止条件1: Pangolin 窗口收到了退出信息 (比如按下ESC)
-          && !((!logReader->hasMore()) && quiet)        // 终止条件2: 如果 quiet 有效, 并且记录文件已经读取完成了 // ? 但是这里的quiet是干嘛的? 
-          && !(eFusion->getTick() == end && quiet))     // 终止条件3: 如果 quiet 有效, 并且也在给定的处理的图像帧数范围内 // ?
+          && !((!logReader->hasMore()) && quiet)        // 终止条件2: 记录文件已经读取完成了, 并且也设置了处理完毕后就退出
+          && !(eFusion->getTick() == end && quiet))     // 终止条件3: 如果设定的处理帧数已经到了并且设置了处理完毕后就退出
     {
-        
+        // step 1 喂图像
         if(!gui->pause->Get() || pangolin::Pushed(*gui->step))
         {
             // 如果没有暂停, 并且也没有处于步进模式的话
@@ -303,111 +302,189 @@ void MainController::run()
                 // 开始统计 日志文件读取(LogRead) 所耗费的时间
                 TICK("LogRead");
 
-                // HERE
+                // step 1.1 加载图像
                 if(rewind)
                 {
                     // 如果设置了数据记录文件要反复读取
                     if(!logReader->hasMore())
                     {
+                        // 记录文件正序已经读取完成, 那么就倒着读取上一帧
+                        // 由于读取的时候 logReader->currentFrame 一直在增加, 所以 logReader->hasMore() 在倒序读取阶段将会一直false
                         logReader->getBack();
                     }
                     else
                     {
+                        // 从记录文件中读取下一帧的图像
                         logReader->getNext();
                     }
 
+                    // 是否记录文件的倒序播放也已经完成
                     if(logReader->rewound())
                     {
+                        // 重置读取帧的累计计数
                         logReader->currentFrame = 0;
                     }
                 }
                 else
                 {
+                    // 如果没有规定循环读取, 那么我们就老老实实的读取下一帧图像数据吧
                     logReader->getNext();
                 }
+                // 停止加载图像部分的计时
                 TOCK("LogRead");
 
+                // step 1.2 跳帧 - 命令行指定导致的, 或者是由于实时性仿真要求的
+                // 如果当前还没有到要开始处理的帧数(由命令行参数指定)
                 if(eFusion->getTick() < start)
                 {
+                    // 那么就"快进"到这个帧数
                     eFusion->setTick(start);
                     logReader->fastForward(start);
                 }
 
+                // ? 目测是因为实时性仿真要求导致的跳帧, 进而导致的权重累乘倍数. 就算是没有跳帧, 这里也是1, 也就是基准
                 float weightMultiplier = framesToSkip + 1;
 
+                // 如果因为当前系统处理较慢, 按照仿真实时处理有需要跳过的帧
                 if(framesToSkip > 0)
                 {
+                    // 跳帧!
                     eFusion->setTick(eFusion->getTick() + framesToSkip);
                     logReader->fastForward(logReader->currentFrame + framesToSkip);
+                    // 清空, 因为跳帧之后当前系统已经按照"模拟实时处理"的要求, 处理这个时候应该处理的图像了
                     framesToSkip = 0;
                 }
 
+                // step 1.3 相机位姿真值的处理
+                // ! 还是写成空指针 nullptr 的形式比较好吧
                 Eigen::Matrix4f * currentPose = 0;
 
                 if(groundTruthOdometry)
                 {
                     currentPose = new Eigen::Matrix4f;
                     currentPose->setIdentity();
+                    // 通过时间戳, 获取相应帧的位姿真值
                     *currentPose = groundTruthOdometry->getTransformation(logReader->timestamp);
                 }
 
-                eFusion->processFrame(logReader->rgb, logReader->depth, logReader->timestamp, currentPose, weightMultiplier);
+                // step 1.4 给劳资喂!
+                eFusion->processFrame(
+                    logReader->rgb,         // 彩色图像缓冲区
+                    logReader->depth,       // 深度图像缓冲区, 单位mm
+                    logReader->timestamp,   // 当前帧的时间戳, 单位为纳秒 (ns)
+                    currentPose,            // GT 位姿变换矩阵的指针, 为空的时候表示 EF 执行追踪过程, 否则直接使用相机位姿的真值
+                    weightMultiplier);      // 因为跳帧导致的权重累乘倍数
 
+                // 及时释放
                 if(currentPose)
                 {
                     delete currentPose;
                 }
 
+                // step 1.5 如果判断是否需要跳帧
+                // std::map 的 .at() 用法
+                // 判断 RUN 模块(就是上面的eFusion->processFrame()函数的执行时间)的执行时间是否超过了帧间的时间, 如果超过了就要计算需要跳帧的帧数
+                // ! 这里的帧数和相机接口或者是记录文件中的也不一致啊
                 if(frameskip && Stopwatch::getInstance().getTimings().at("Run") > 1000.f / 30.f)
                 {
                     framesToSkip = int(Stopwatch::getInstance().getTimings().at("Run") / (1000.f / 30.f));
                 }
-            }
-        }
+            } // 如果可以喂图像
+        } // 如果没有暂停, 并且也没有处于步进模式的话
         else
         {
             // 如果处于暂停或者是步进模式下, 那么就只 predict 模型的图像
             eFusion->predict();
         }
 
+        // step 2 GUI 绘制更新
 
-        // TODO 看上去和调试有关
+        // 记录 GUI 绘制的时间
         TICK("GUI");
-
         
+        // step 2.1 如果视角跟随了当前的相机位姿
         if(gui->followPose->Get())
         {
-            // 如果选择了使用相机当前的位姿进行观测
+            // TODO 这里的注释可以再润色一下, 有点不知道该怎么说
+            /* 如果选择了使用相机当前的位姿进行观测, 那么我们的任务就是在这里计算虚拟观测相机应该从什么视角和位置去观测, 渲染已经构建的模型
+             * 思考这样的一个问题, 我们有一个物体的模型, 知道了物体的位姿 Two=[Rwo, two;0^T, 1](下标o表示object, w表示world),  怎么在世界坐标下绘制呢?
+             * 处理办法一般是将绘制的模型先旋转,再平移, 对于绘制的模型上的一个点, 在其自身坐标系的坐标为 Po, 在世界坐标系下的坐标为 Pw, 那么
+             * 这个过程就是求解模型上每个点在世界坐标系下的过程:
+             *      Pw = Rwo*Po + two
+             * 对于这里,我们的问题是相反的. 我们希望虚拟观察摄像机以位姿Twv去对构建的模型去观测, 就需要对!!坐标系本身!!进行变换, 即将观察视角从世界坐标系的位姿转换到
+             * 虚拟观测相机坐标系的位姿; 如果记录一个点在世界坐标系下的坐标为Pw, 在虚拟观察相机坐标系下的坐标为Pv(v=virtual), 那么上述这个过程会带来Pw=>Pv的变化
+             * 有:
+             *      Pw = Rwv*Pv + twv
+             * 如果变换形式, 把 Pv 挪到等式左侧:
+             *      Pv = (Rwv^-1)*Pw - ((Rwv^-1)*twv) => R_ * Pw + t_
+             * 这里的 R_ 和 t_ 就是将观察位姿从世界坐标系原点移动所需要发生的位姿变换.
+             * 
+             * 对于旋转矩阵R, 其三个列向量代表了旋转后物体自身坐标系的坐标轴的方向向量, 在旋转前物体自身坐标系下的坐标(有点绕). 如果把 Rwv 写成列向量的形式, 会发现:
+             * |           |   | 1 |   |   |
+             * | x , y , z | * | 0 | = | x |
+             * |           |   | 0 |   |   |
+             * 
+             * |           |   | 0 |   |   |
+             * | x , y , z | * | 1 | = | y |
+             * |           |   | 0 |   |   |
+             * 
+             * |           |   | 0 |   |   |
+             * | x , y , z | * | 0 | = | z |
+             * |           |   | 1 |   |   |
+             * 
+             * 这里的列向量 x y z 就是旋转矩阵 R 要转换到的坐标系的坐标轴方向向量
+             * 
+             * 根据上面, 有: 
+             *                                | -x- |
+             *      R_ = (Rwv^-1) = (Rwv^T) = | -y- |  (原先的列向量变为了行向量)
+             *                                | -z- |
+             * 
+             *                              | -x- |   | twv.x |   | x.*twv |
+             *      t_ = -((Rwv^-1)*twv) =  | -y- | * | twv.y | = | y.*twv | (变成了数量积的形式)
+             *                              | -z- |   | twv.z |   | z.*twv |
+             */ 
+
             pangolin::OpenGlMatrix mv;
 
+            // 获取位姿, 构造旋转
             Eigen::Matrix4f currPose = eFusion->getCurrPose();
             Eigen::Matrix3f currRot = currPose.topLeftCorner(3, 3);
-
+            // 转换成为四元数的目的是减少后面过程的计算量
             Eigen::Quaternionf currQuat(currRot);
+            
+            // 相机坐标系下指向正前方和正上方的方向向量; 另外的一个轴可以通过叉乘计算得到
             Eigen::Vector3f forwardVector(0, 0, 1);
-            Eigen::Vector3f upVector(0, iclnuim ? 1 : -1, 0);
+            Eigen::Vector3f upVector(0, iclnuim ? 1 : -1, 0);   // -1 是因为OpenGL中的y轴正方向向下
 
+            // 上述方向向量转换到世界坐标系下的坐标表示
             Eigen::Vector3f forward = (currQuat * forwardVector).normalized();
             Eigen::Vector3f up = (currQuat * upVector).normalized();
 
+            // 构造平移向量
             Eigen::Vector3f eye(currPose(0, 3), currPose(1, 3), currPose(2, 3));
-
+            // eye 表示虚拟观测相机中心到OpenGL世界坐标系原点的距离, 由于我们希望在原始相机的后面退一点点观看, 所以减去了个 forward 向量作为新的虚拟相机观测地点
             eye -= forward;
 
+            // 然后又加上去了... 变成了之前的 eye , 也就是相机所在的位置
             Eigen::Vector3f at = eye + forward;
 
-            Eigen::Vector3f z = (eye - at).normalized();  // Forward
+            // 计算在虚拟相机应该处的位姿, 这个时候虚拟相机坐标系的三个坐标轴的方向
+            Eigen::Vector3f z = (eye - at).normalized();  // Forward 其实和下面是完全等效的
+            // Eigen::Vector3f z = (-forward).normalized();  
             Eigen::Vector3f x = up.cross(z).normalized(); // Right
-            Eigen::Vector3f y = z.cross(x);
+            Eigen::Vector3f y = z.cross(x);               // 叉乘出来
 
             Eigen::Matrix4d m;
+            // 行优先, 也就是存进去之后其实和下面代码列写的形式是一样的(而不是输出之后反而成为了转置的形式)
             m << x(0),  x(1),  x(2),  -(x.dot(eye)),
                  y(0),  y(1),  y(2),  -(y.dot(eye)),
                  z(0),  z(1),  z(2),  -(z.dot(eye)),
                     0,     0,     0,              1;
 
+            // 将矩阵中的数据复制到OpenGL的位姿矩阵中. 注意Eigen中矩阵存储是按列存储的, 这和OpenGL中的矩阵存储方式一致
             memcpy(&mv.m[0], m.data(), sizeof(Eigen::Matrix4d));
 
+            // 设置渲染器的观察视图
             gui->s_cam.SetModelViewMatrix(mv);
         }
 

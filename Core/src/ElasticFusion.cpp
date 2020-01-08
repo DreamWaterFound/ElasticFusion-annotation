@@ -966,6 +966,7 @@ const int & ElasticFusion::getTimeDelta()
     return timeDelta;
 }
 
+// 设置当前系统要处理的帧的id
 void ElasticFusion::setTick(const int & val)
 {
     tick = val;
@@ -976,6 +977,7 @@ const float & ElasticFusion::getMaxDepthProcessed()
     return maxDepthProcessed;
 }
 
+// 获取当前帧相机的位姿(其实获取的时候当前帧位姿已经估计完事了)
 const Eigen::Matrix4f & ElasticFusion::getCurrPose()
 {
     return currPose;

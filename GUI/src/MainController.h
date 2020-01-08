@@ -71,44 +71,44 @@ class MainController
          */
         void loadCalibration(const std::string & filename);
 
-        bool good;                  ///< 当前是否已经正确地初始化数据源了
-        ElasticFusion * eFusion;    ///< ElasticFusion Core 对象指针
-        GUI * gui;                  ///< GUI 窗口对象
+        bool good;                                      ///< 当前是否已经正确地初始化数据源了
+        ElasticFusion * eFusion;                        ///< ElasticFusion Core 对象指针
+        GUI * gui;                                      ///< GUI 窗口对象
         GroundTruthOdometry * groundTruthOdometry;      ///< 轨迹真值文件对象句柄
-        LogReader * logReader;      ///< 记录文件读取器的句柄, 根据情况也会是实时相机的接口
+        LogReader * logReader;                          ///< 记录文件读取器的句柄, 根据情况也会是实时相机的接口
 
-        bool iclnuim;               ///< 命令行中是否指定了参数 -icl
-        std::string logFile;        ///< 命令行中指定的记录文件路径
-        std::string poseFile;       ///< 命令行参数中指定的真值文件
+        bool iclnuim;                                   ///< 是否使用 ICL-NUIM 数据集
+        std::string logFile;                            ///< 命令行中指定的记录文件路径
+        std::string poseFile;                           ///< 命令行参数中指定的真值文件
 
-        float confidence,           ///? 什么的置信度?
-              depth,                ///< 深度切断值. 这个值是考虑到过远的深度值测量不准确, 误差较大, 所以直接将距离相机过远的深度值"切掉",我们直接不用了
-              icp,                  ///?
-              icpErrThresh,         ///? ICP 迭代误差的最小阈值?
-              covThresh,            ///?
-              photoThresh,          ///? 光度误差的最小阈值?
-              fernThresh;           ///? 随机蕨?
+        float confidence,                               ///< Surfel confidence threshold
+              depth,                                    ///< 深度切断值. 这个值是考虑到过远的深度值测量不准确, 误差较大, 所以直接将距离相机过远的深度值"切掉",我们直接不用了
+              icp,                                      ///< Relative ICP/RGB tracking weight
+              icpErrThresh,                             ///< Local loop closure residual threshold
+              covThresh,                                ///< Local loop closure covariance threshold
+              photoThresh,                              ///< Global loop closure photometric threshold
+              fernThresh;                               ///< Fern encoding threshold
 
-        int timeDelta,              ///?
-            icpCountThresh,         ///?
-            start,                  ///?
-            end;                    ///? 疑似是设置的处理的帧数的最大值
+        int timeDelta,                                  ///< Time window length
+            icpCountThresh,                             ///< Local loop closure inlier threshold
+            start,                                      ///< Frames to skip at start of log 跳过头几帧， 存储的数字为帧id
+            end;                                        ///< Cut off frame of log 执行多少帧， 存储的为最后一帧处理的id
 
         bool fillIn,
-             openLoop,              ///? 是否以开环模式运行
-             reloc,                 ///? 是否使能重定位
-             frameskip,             ///? 跳帧?
-             quiet,                 ///? 是否安静模式? 但是感觉又参与到了程序的结束, 如果记录文件读取完毕, 这个为真, 那么就直接退出了
-             fastOdom,              ///< 是否纯里程计模式
-             so3,                   ///? 和命令行参数中是否指定 -nso 参数有关系
-             rewind,                ///< 设置数据记录文件是否需要反复循环读取
-             frameToFrameRGB;       ///? 是否使用 Frame to Frame 工作模式
+             openLoop,                                  ///< Open loop mode, 不使用闭环
+             reloc,                                     ///< Enable relocalisation
+             frameskip,                                 ///< Frame skip if processing a log to simulate real-time. 就是如果处理比较慢， 那么就根据时间戳跳帧
+             quiet,                                     ///< Quit when finished a log 播放记录文件完成后自动退出
+             fastOdom,                                  ///< Fast odometry (single level pyramid)
+             so3,                                       ///< Disables SO(3) pre-alignment in tracking
+             rewind,                                    ///< Rewind and loop log forever 设置数据记录文件是否需要反复循环读取
+             frameToFrameRGB;                           ///< Do frame-to-frame RGB tracking
 
-        int framesToSkip;
+        int framesToSkip;                               ///< 为了仿真"实时处理数据", 当处理速度跟不上帧率的时候会产生的跳帧的个数
         bool streaming;
-        bool resetButton;           ///< 复位请求
+        bool resetButton;                               ///< 复位请求
 
-        Resize * resizeStream;      ///< 使用 Shader 对原始图像进行降采样的对象
+        Resize * resizeStream;                          ///< 使用 Shader 对原始图像进行降采样的对象
 };
 
 #endif /* MAINCONTROLLER_H_ */

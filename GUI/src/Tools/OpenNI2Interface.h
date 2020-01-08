@@ -56,11 +56,13 @@ class OpenNI2Interface : public CameraInterface
          * @param[in] fps 打开的图像帧率
          */
         OpenNI2Interface(int inWidth = 640, int inHeight = 480, int fps = 30);
+        /** @brief 析构函数 */
         virtual ~OpenNI2Interface();
 
         /// 图像的大小和帧率
         const int width, height, fps;
 
+        /** @brief 在屏幕上输出当前设置的各种模式 */
         void printModes();
 
         /**
@@ -71,7 +73,6 @@ class OpenNI2Interface : public CameraInterface
          * @return 是否存在
          */
         bool findMode(int x, int y, int fps);
-
 
         /**
          * @brief 设置自动曝光
@@ -85,8 +86,19 @@ class OpenNI2Interface : public CameraInterface
          */
         virtual void setAutoWhiteBalance(bool value);
 
-
+        /**
+         * @brief 获取当前是否设置了自动曝光
+         * @return true 
+         * @return false 
+         */
         bool getAutoExposure();
+        
+        /**
+         * @brief 获取当前是否设置了自动白平衡
+         * 
+         * @return true 
+         * @return false 
+         */
         bool getAutoWhiteBalance();
 
         /**
@@ -220,33 +232,41 @@ class OpenNI2Interface : public CameraInterface
                 ThreadMutexObject<int> & latestRgbIndex;        ///< 上一帧彩色图像id的引用
 
                 std::pair<uint8_t *, int64_t> * rgbBuffers;     ///< 彩色图像缓冲区
-                std::pair<std::pair<uint8_t *, uint8_t *>, int64_t> * frameBuffers; ///< 帧的缓冲区
+                std::pair<
+                    std::pair<uint8_t *, uint8_t *>, 
+                    int64_t> * frameBuffers;                    ///< 帧的缓冲区
         };
 
     private:
-        openni::Device device;              ///< OpenNI2 设备对象
+        openni::Device device;                                  ///< OpenNI2 设备对象
 
         
-        openni::VideoStream depthStream;    ///< OpenNI2 深度图像流
-        openni::VideoStream rgbStream;      ///< OpenNI2 彩色图像流
+        openni::VideoStream depthStream;                        ///< OpenNI2 深度图像流
+        openni::VideoStream rgbStream;                          ///< OpenNI2 彩色图像流
 
         // Map for formats from OpenNI2
-        std::map<int, std::string> formatMap;   ///< 保存不同流的类型和对应的字符串描述, 建立了id和字符串描述的关系
+        std::map<int, std::string> formatMap;                   ///< 保存不同流的类型和对应的字符串描述, 建立了id和字符串描述的关系
 
-        int64_t lastRgbTime;                ///< 上一帧的彩色图像时间戳
-        int64_t lastDepthTime;              ///< 上一帧的深度图像时间戳
+        int64_t lastRgbTime;                                    ///< 上一帧的彩色图像时间戳
+        int64_t lastDepthTime;                                  ///< 上一帧的深度图像时间戳
 
-        ThreadMutexObject<int> latestRgbIndex;  ///< 有线程锁保护的, 记录最近彩色图像的id
-        std::pair<uint8_t *, int64_t> rgbBuffers[numBuffers];       ///< 彩色图像缓冲区, 第一个元素是缓冲区指针, 第二个元素是时间戳
+        ThreadMutexObject<int> latestRgbIndex;                  ///< 有线程锁保护的, 记录最近彩色图像的id
+        std::pair<uint8_t *, int64_t> rgbBuffers[numBuffers];   ///< 彩色图像缓冲区, 第一个元素是缓冲区指针, 第二个元素是时间戳
 
-        RGBCallback * rgbCallback;          ///< 彩色帧数据监听器
-        DepthCallback * depthCallback;      ///< 深度数据监听器
+        RGBCallback * rgbCallback;                              ///< 彩色帧数据监听器
+        DepthCallback * depthCallback;                          ///< 深度数据监听器
 
         
-        bool initSuccessful;                ///< 标记是否初始化成功了
-        std::string errorText;              ///< 缓存操作 OpenNI 接口过程中的错误提示信息
+        bool initSuccessful;                                    ///< 标记是否初始化成功了
+        std::string errorText;                                  ///< 缓存操作 OpenNI 接口过程中的错误提示信息
 
-        //For removing tabs from OpenNI's error messages
+        /**
+         * @brief For removing tabs from OpenNI's error messages
+         * @note 从错误信息的文本描述中删除 tab 符, 其实就是判断传入的某个参数是否是tab符
+         * @param[in] c 要判断的字符
+         * @return true 
+         * @return false 
+         */
         static bool isTab(char c)
         {
             switch(c)

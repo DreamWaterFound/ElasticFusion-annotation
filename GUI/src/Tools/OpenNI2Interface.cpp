@@ -194,6 +194,7 @@ OpenNI2Interface::OpenNI2Interface(int inWidth, int inHeight, int fps)
     }
 }
 
+// 析构
 OpenNI2Interface::~OpenNI2Interface()
 {
     if(initSuccessful)
@@ -268,8 +269,10 @@ bool OpenNI2Interface::findMode(int x, int y, int fps)
     return found;
 }
 
+// 输出当前设置的各种模式
 void OpenNI2Interface::printModes()
 {
+    // step 1 输出当前深度图像流的模式
     const openni::Array<openni::VideoMode> & depthModes = depthStream.getSensorInfo().getSupportedVideoModes();
 
     openni::VideoMode currentDepth = depthStream.getVideoMode();
@@ -282,6 +285,7 @@ void OpenNI2Interface::printModes()
                                      "fps " <<
                                      formatMap[currentDepth.getPixelFormat()] << ")" << std::endl;
 
+    // step 2 输出所有深度图像的模式
     for(int i = 0; i < depthModes.getSize(); i++)
     {
         std::cout << depthModes[i].getResolutionX() <<
@@ -293,6 +297,7 @@ void OpenNI2Interface::printModes()
                      formatMap[depthModes[i].getPixelFormat()] << std::endl;
     }
 
+    // step 3 输出当前彩色图像流的模式
     const openni::Array<openni::VideoMode> & rgbModes = rgbStream.getSensorInfo().getSupportedVideoModes();
 
     openni::VideoMode currentRGB = depthStream.getVideoMode();
@@ -305,6 +310,7 @@ void OpenNI2Interface::printModes()
                                    "fps " <<
                                    formatMap[currentRGB.getPixelFormat()] << ")" << std::endl;
 
+    // step 4 输出所有彩色图像流的模式
     for(int i = 0; i < rgbModes.getSize(); i++)
     {
         std::cout << rgbModes[i].getResolutionX() <<
@@ -329,11 +335,13 @@ void OpenNI2Interface::setAutoWhiteBalance(bool value)
     rgbStream.getCameraSettings()->setAutoWhiteBalanceEnabled(value);
 }
 
+// 获取当前是否设置了自动曝光
 bool OpenNI2Interface::getAutoExposure()
 {
     return rgbStream.getCameraSettings()->getAutoExposureEnabled();
 }
 
+// 获取当前是否设置了自动白平衡
 bool OpenNI2Interface::getAutoWhiteBalance()
 {
     return rgbStream.getCameraSettings()->getAutoWhiteBalanceEnabled();

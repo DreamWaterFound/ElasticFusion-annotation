@@ -61,19 +61,20 @@ class ElasticFusion
 
         /**
          * Process an rgb/depth map pair
-         * @param rgb unsigned char row major order
-         * @param depth unsigned short z-depth in millimeters, invalid depths are 0
-         * @param timestamp nanoseconds (actually only used for the output poses, not important otherwise)
-         * @param inPose optional input SE3 pose (if provided, we don't attempt to perform tracking)
-         * @param weightMultiplier optional full frame fusion weight
-         * @param bootstrap if true, use inPose as a pose guess rather than replacement
+         * @param rgb               unsigned char row major order
+         * @param depth             unsigned short z-depth in millimeters, invalid depths are 0
+         * @param timestamp         nanoseconds (actually only used for the output poses, not important otherwise)
+         * @param inPose            optional input SE3 pose (if provided, we don't attempt to perform tracking)
+         * @param weightMultiplier  optional full frame fusion weight  //? 
+         * @param bootstrap         if true, use inPose as a pose guess rather than replacement
          */
-        EFUSION_API void processFrame(const unsigned char * rgb,
-                          const unsigned short * depth,
-                          const int64_t & timestamp,
-                          const Eigen::Matrix4f * inPose = 0,
-                          const float weightMultiplier = 1.f,
-                          const bool bootstrap = false);
+        EFUSION_API void processFrame(
+                          const unsigned char *     rgb,
+                          const unsigned short *    depth,
+                          const int64_t &           timestamp,
+                          const Eigen::Matrix4f *   inPose = 0,
+                          const float               weightMultiplier = 1.f,
+                          const bool                bootstrap = false);
 
         /**
          * Predicts the current view of the scene, updates the [vertex/normal/image]Tex() members
@@ -131,7 +132,7 @@ class ElasticFusion
         EFUSION_API const float & getConfidenceThreshold();
 
         /**
-         * If you set this to true we just do 2.5D RGB-only Lucas–Kanade tracking (no fusion)
+         * If you set this to true we just do 2.5D RGB-only Lucas-Kanade tracking (no fusion)
          * @param val
          */
         EFUSION_API void setRgbOnly(const bool & val);
@@ -285,7 +286,7 @@ class ElasticFusion
 
         Eigen::Vector3f rodrigues2(const Eigen::Matrix3f& matrix);
 
-        Eigen::Matrix4f currPose;
+        Eigen::Matrix4f currPose;           ///< 当前帧相机的位姿
 
         int tick;                           ///< 当前处理过的帧数, 也是处理的图像的时间戳
         const int timeDelta;

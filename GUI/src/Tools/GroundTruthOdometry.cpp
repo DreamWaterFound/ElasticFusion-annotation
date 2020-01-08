@@ -42,7 +42,7 @@ GroundTruthOdometry::~GroundTruthOdometry()
 
 }
 
-// 从给定的文件中加载相机路径
+// 从给定的文件中加载相机轨迹文件路径
 void GroundTruthOdometry::loadTrajectory(const std::string & filename)
 {
     // step 0 打开文件
@@ -76,48 +76,60 @@ void GroundTruthOdometry::loadTrajectory(const std::string & filename)
     }
 }
 
+// 获取指定时间戳时, 相机位姿 Tcw
 Eigen::Matrix4f GroundTruthOdometry::getTransformation(uint64_t timestamp)
 {
     Eigen::Matrix4f pose = Eigen::Matrix4f::Identity();
 
+    // 不是第一次读取
     if(last_utime != 0)
     {
+        // 找
         std::map<uint64_t, Eigen::Isometry3f>::const_iterator it = camera_trajectory.find(last_utime);
         if (it == camera_trajectory.end())
         {
+            // 没找到? 就返回单位阵
             last_utime = timestamp;
             return pose;
         }
-
-        //Poses are stored in the file in iSAM basis, undo it
+        
+        //Poses are stored in the file in iSAM basis, undo it -- 有一个格式上的转化
         Eigen::Matrix4f M;
         M <<  0,  0, 1, 0,
              -1,  0, 0, 0,
               0, -1, 0, 0,
               0,  0, 0, 1;
 
+        // ? 但是这里给的位姿是在原始相机位姿文件中给的坐标系表示的, 而下面返回的位姿却是在 EasticFusion 起始帧的相机坐标系下表示的?
         pose = M.inverse() * camera_trajectory[timestamp] * M;
     }
     else
     {
+        // 是第一次读取相机的位姿
         std::map<uint64_t, Eigen::Isometry3f>::const_iterator it = camera_trajectory.find(timestamp);
+        // 注意, 这里获得的一般不是单位阵, 但是后面返回pose却是单位阵
         Eigen::Isometry3f ident = it->second;
         pose = Eigen::Matrix4f::Identity();
+        // 记录这个 0 对应的相机位姿, 相当于以后所有的返回的相机位姿真值是在 ElasticFusion 自己坐标系下的表示
         camera_trajectory[last_utime] = ident;
     }
 
+    // Update
     last_utime = timestamp;
 
     return pose;
 }
 
+// 获取相机位姿的协方差, 恒对角阵
 Eigen::MatrixXd GroundTruthOdometry::getCovariance()
 {
     Eigen::MatrixXd cov(6, 6);
     cov.setIdentity();
+    // 平移
     cov(0, 0) = 0.1;
     cov(1, 1) = 0.1;
     cov(2, 2) = 0.1;
+    // 旋转
     cov(3, 3) = 0.5;
     cov(4, 4) = 0.5;
     cov(5, 5) = 0.5;
