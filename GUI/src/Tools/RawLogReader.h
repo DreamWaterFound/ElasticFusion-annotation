@@ -113,8 +113,8 @@ class RawLogReader : public LogReader
         const std::string getFile();
 
         /**
-         * @brief // ? 自动曝光/白平衡参数设置? 对于记录文件无法设置, 空函数
-         * @param[in] value // ?
+         * @brief 自动曝光/白平衡参数设置, 对于记录文件无法设置, 空函数
+         * @param[in] value 是否
          */
         void setAuto(bool value);
 

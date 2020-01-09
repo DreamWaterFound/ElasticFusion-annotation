@@ -49,7 +49,7 @@
 // 位姿计算和转换的小工具
 #include <Utils/OdometryProvider.h>
 
-/** @brief // ? */
+/** @brief 提供相机位姿真值数据读取的接口 */
 class GroundTruthOdometry
 {
     public:
@@ -64,7 +64,7 @@ class GroundTruthOdometry
 
         /**
          * @brief 获取指定时间戳时, 相机位姿 Tcw
-         * @param[in] timestamp 给定时间戳 // ? 单位?
+         * @param[in] timestamp 给定时间戳, 单位 ns
          * @return Eigen::Matrix4f Tcw
          */
         Eigen::Matrix4f getTransformation(uint64_t timestamp);

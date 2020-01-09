@@ -27,20 +27,21 @@
  *
  */
 
-
+// 当前类定义
 #include "LiveLogReader.h"
 
+// 相关驱动的接口
 #include "OpenNI2Interface.h"
 #include "RealSenseInterface.h"
 
 // 构造函数
 LiveLogReader::LiveLogReader(
-            std::string file,   // ? 记录文件的路径, 这里没有使用到只是用于构造父类对象
+            std::string file,   // 记录文件的路径, 这里没有使用到只是用于构造父类对象
             bool flipColors,    // 是否左右翻转图像
             CameraType type)    // 摄像头类型
  : LogReader(file, flipColors),
    lastFrameTime(-1),           // 初始化上一帧对象的时间戳
-   lastGot(-1)                  // ?
+   lastGot(-1)                  // 上一帧深度图像在图像缓冲区的id
 {
     // step 0 创建相应类型的相机接口
     std::cout << "Creating live capture... "; std::cout.flush();

@@ -29,6 +29,7 @@
 
 #include "OpenNI2Interface.h"
 
+// 构造函数
 OpenNI2Interface::OpenNI2Interface(int inWidth, int inHeight, int fps)
  : width(inWidth),
    height(inHeight),

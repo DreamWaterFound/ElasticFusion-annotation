@@ -120,9 +120,8 @@ void RawLogReader::getCore()
     // step 4 读取彩色图像数据
     if(imageSize > 0)
     {
-        // ?
         // 这里之所以需要判断一下, 我猜是因为考虑到彩色图像和深度图像的同步问题, 会出现先存一张深度图像;
-        // 但是如果这张图像对应的彩色图像先来, 就会没有存储, 对应到这里就需要判断是否是没有存对应的深度图像
+        // 但是如果这张图像对应的彩色图像先来, 就会没有存储, 对应到这里就需要判断是否是没有存对应的彩色图像
         tmp = fread(imageReadBuffer,imageSize,1,fp);
         assert(tmp);
     }
@@ -256,7 +255,7 @@ const std::string RawLogReader::getFile()
     return file;
 }
 
-// ? 自动曝光/白平衡参数设置? 对于记录文件无法设置, 空函数
+// 自动曝光/白平衡参数设置, 对于记录文件无法设置, 空函数
 void RawLogReader::setAuto(bool value)
 {
 

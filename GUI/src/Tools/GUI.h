@@ -37,7 +37,7 @@
 // STL
 #include <map>
 
-// ?
+// ElasticFusion 自己声明的 GPU 纹理对象
 #include <GPUTexture.h>
 
 // Utils, 提供相机的内参文件
@@ -45,9 +45,10 @@
 // OpenGL Shader
 #include <Shaders/Shaders.h>
 
-// ?
+// 保存有当前显存余量的寄存器
 #define GL_GPU_MEM_INFO_CURRENT_AVAILABLE_MEM_NVX 0x9049
 
+// FUTURE_TODO 进一步检查之前的注释, 以及涉及到的变量是否正确
 
 /** @brief 图形用户界面对象 */
 class GUI
@@ -89,9 +90,11 @@ class GUI
             glPixelStorei(GL_PACK_ALIGNMENT, 1);        // GPU => CPU,  Pack (因为内存中的数据格式更加规整)
 
             // Internally render at 3840x2160
-            // ? 提供深度数据?
+            // 这个分辨率决定了使用 faxx 方式绘制 Global Model 时候使用的分辨率
             renderBuffer = new pangolin::GlRenderBuffer(3840, 2160),
-            // ? 提供彩色数据
+            
+            
+            // ? 用于 fxaa 第二阶段的输出纹理
             colorTexture = new GPUTexture(
                 renderBuffer->width,        // 图像宽度
                 renderBuffer->height,       // 图像高度
@@ -106,11 +109,11 @@ class GUI
             colorFrameBuffer->AttachColour(*colorTexture->texture);
             colorFrameBuffer->AttachDepth(*renderBuffer);
 
-            // 着色语言 GLSL 加载
-            // ? 普通着色的语言
+            // 着色语言 GLSL 加载, 这两个 GLSL 程序都是为 fxaa 渲染服务的
+            // ? 第一阶段使用的
             colorProgram = std::shared_ptr<Shader>(
                 loadProgramFromFile("draw_global_surface.vert", "draw_global_surface_phong.frag", "draw_global_surface.geom"));
-            // ? 快速近似抗锯齿的
+            // ? 第二阶段使用的
             fxaaProgram = std::shared_ptr<Shader>(loadProgramFromFile("empty.vert", "fxaa.frag", "quad.geom"));
 
             // 设置窗口的状态
@@ -150,7 +153,7 @@ class GUI
             pangolin::Display(GPUTexture::DEPTH_NORM).SetAspect(640.0f / 480.0f);
             // 地图模型的彩色图像窗口
             pangolin::Display("ModelImg").SetAspect(640.0f / 480.0f);
-            // ? 地图模型的深度图像窗口
+            // 地图模型的深度图像窗口
             pangolin::Display("Model").SetAspect(640.0f / 480.0f);
 
             // step 4 ploter 创建
@@ -211,15 +214,15 @@ class GUI
 
             // ==== Panel 上的变量 - 选项 ====
             pyramid             = new pangolin::Var<bool>("ui.Pyramid", true, true);                        // 是否使用图像金字塔
-            so3                 = new pangolin::Var<bool>("ui.SO(3)", true, true);                          // ?
+            so3                 = new pangolin::Var<bool>("ui.SO(3)", true, true);                          // 是否 Disables SO(3) pre-alignment in tracking
             frameToFrameRGB     = new pangolin::Var<bool>("ui.Frame to frame RGB", false, true);            // 是否使用帧-帧RGB方式的位姿估计
             fastOdom            = new pangolin::Var<bool>("ui.Fast Odometry", false, true);                 // 是否使用快速视觉里程计模式
-            rgbOnly             = new pangolin::Var<bool>("ui.RGB only tracking", false, true);             // ?
+            rgbOnly             = new pangolin::Var<bool>("ui.RGB only tracking", false, true);             // 是否仅使用 2.5D RGB-only Lucas-Kanade tracking // ? 2.5D?
 
             // Panel 上的变量 - 设置
-            confidenceThreshold = new pangolin::Var<float>("ui.Confidence threshold", 10.0, 0.0, 24.0);     // ?
-            depthCutoff         = new pangolin::Var<float>("ui.Depth cutoff", 3.0, 0.0, 12.0);              // ?
-            icpWeight           = new pangolin::Var<float>("ui.ICP weight", 10.0, 0.0, 100.0);              // ?
+            confidenceThreshold = new pangolin::Var<float>("ui.Confidence threshold", 10.0, 0.0, 24.0);     // Raw data fusion confidence threshold
+            depthCutoff         = new pangolin::Var<float>("ui.Depth cutoff", 3.0, 0.0, 12.0);              // 深度值的切断处
+            icpWeight           = new pangolin::Var<float>("ui.ICP weight", 10.0, 0.0, 100.0);              // 设置 Weight for ICP in tracking, 也就是几何误差和色彩误差相互的权重
 
             // ==== Panel 上的变量 - 选项 ====
             followPose          = new pangolin::Var<bool>("ui.Follow pose", true, true);                    // 观察视角是否跟随相机位姿
@@ -242,9 +245,9 @@ class GUI
 
             totalPoints         = new pangolin::Var<std::string>("ui.Total points", "0");                   // 当前 Global Model 中点的总个数
             totalNodes          = new pangolin::Var<std::string>("ui.Total nodes", "0");                    // deformation graph 中的 node 总个数
-            totalFerns          = new pangolin::Var<std::string>("ui.Total ferns", "0");                    // ?
-            totalDefs           = new pangolin::Var<std::string>("ui.Total deforms", "0");                  // ?
-            totalFernDefs       = new pangolin::Var<std::string>("ui.Total fern deforms", "0");             // ?
+            totalFerns          = new pangolin::Var<std::string>("ui.Total ferns", "0");                    // 随机蕨数据库中的帧总个数
+            totalDefs           = new pangolin::Var<std::string>("ui.Total deforms", "0");                  // 由 Local Loop 触发的 deformation 次数
+            totalFernDefs       = new pangolin::Var<std::string>("ui.Total fern deforms", "0");             // 由 Global Loop 触发的 deformation 次数
 
             trackInliers        = new pangolin::Var<std::string>("ui.Inliers", "0");                        // 当前次 ICP 过程中的 inliers
             trackRes            = new pangolin::Var<std::string>("ui.Residual", "0");                       // 当前次 ICP 过程中的残差
@@ -257,7 +260,10 @@ class GUI
             }
         }
 
-        
+        /**
+         * @brief 析构函数, 就是删除各种 new 出来的对象
+         * 
+         */
         virtual ~GUI()
         {
             delete pause;
@@ -265,6 +271,7 @@ class GUI
             delete inPlot;
             delete resPlot;
 
+            // 只有使用 live camera 的时候才回 new 这个对象
             if(autoSettings)
             {
                 delete autoSettings;
@@ -357,11 +364,11 @@ class GUI
                                      0.1f);                                     // 大小                   
 
             #else
-            pangolin::glDrawFrustum(Kinv,
-                                     Resolution::getInstance().width(),
-                                     Resolution::getInstance().height(),
-                                     pose,
-                                     0.1f);
+            pangolin::glDrawFrustum(Kinv,                                       // 相机内参的逆
+                                    Resolution::getInstance().width(),          // 图像宽度
+                                    Resolution::getInstance().height(),         // 图像高度
+                                    pose,                                       // 相机位姿
+                                    0.1f);                                      // 大小                   
             #endif
         }
 
@@ -376,7 +383,7 @@ class GUI
             if(showcaseMode)
                 return;
 
-            // ? 为什么要失能深度测试呢?
+            // 为什么要失能深度测试呢? 因为这里只需要绘制平面的纹理, 并不需要绘制空间物体, 也就无从需要确定物体之间的相互遮挡关系
             glDisable(GL_DEPTH_TEST);
             // 激活对应的 View, 然后执行渲染即可显示
             pangolin::Display(id).Activate();
@@ -409,7 +416,7 @@ class GUI
          * @param[in] timeDelta         时间窗口的长度
          * @param[in] invertNormals     是否使用 ICL-NUIM 数据集
          */
-        // TODO
+        // FUTURE_TODO 进一步检查之前的注释, 以及涉及到的变量是否正确
         void drawFXAA(pangolin::OpenGlMatrix mvp,
                       pangolin::OpenGlMatrix mv,
                       const std::pair<GLuint, GLuint> & model,
@@ -418,47 +425,58 @@ class GUI
                       const int timeDelta,
                       const bool invertNormals)
         {
-            //First pass computes positions, colors and normals per pixel
+            // step 1 绘图准备
+            // First pass computes positions, colors and normals per pixel
+            // 指定当前绘图使用帧缓冲 colorFrameBuffer
             colorFrameBuffer->Bind();
-
+            
+            // ? 告知下面的操作是对于 ViewPort 的? 属性设置入栈
             glPushAttrib(GL_VIEWPORT_BIT);
-
-            glViewport(0, 0, renderBuffer->width, renderBuffer->height);
-
+            // 设置视口大小
+            glViewport(0, 0,                                            // 视口的左上角点坐标
+                       renderBuffer->width, renderBuffer->height);      // 是否的宽度和高度
+            // 重设背景
             glClearColor(0.05 * !showcaseMode, 0.05 * !showcaseMode, 0.3 * !showcaseMode, 0);
-
+            // 清空色彩和深度缓冲区
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+            // step 2 装载着色器程序并传入参数
             colorProgram->Bind();
-
-            colorProgram->setUniform(Uniform("MVP", mvp));
-
+            // 将对应的 CPU 端的变量 mvp 加载到 GLSL 程序中的 "MVP" 变量中, 下同
+            // 模型显示视图的投影矩阵
+            colorProgram->setUniform(Uniform("MVP", mvp));                      
+            // The point fusion confidence threshold
             colorProgram->setUniform(Uniform("threshold", threshold));
-
+            // 当前 ElasticFusion 已经处理过的帧数
             colorProgram->setUniform(Uniform("time", time));
-
+            // 时间窗口的长度
             colorProgram->setUniform(Uniform("timeDelta", timeDelta));
-
+            // 是否翻转Y轴(不翻转的话, 上方是Y轴的负方向)
             colorProgram->setUniform(Uniform("signMult", invertNormals ? 1.0f : -1.0f));
-
-            colorProgram->setUniform(Uniform("colorType", (drawNormals->Get() ? 1 : drawColors->Get() ? 2 : drawTimes->Get() ? 3 : 0)));
-
+            // 着色模式, 有三种
+            colorProgram->setUniform(Uniform(
+                            "colorType",
+                             (drawNormals->Get() ? 1 :                  // 1 - 法向贴图
+                                    drawColors->Get() ? 2 :             // 2 - RGB 图像纹理贴图
+                                        drawTimes->Get() ? 3 : 0)));    // 3 - 按照面元创建的时间先后顺序进行着色
+            // 是否绘制 unstable 的点
             colorProgram->setUniform(Uniform("unstable", drawUnstable->Get()));
-
+            // 是否绘制时间窗口
             colorProgram->setUniform(Uniform("drawWindow", drawWindow->Get()));
-
+            // 相机位姿
             Eigen::Matrix4f pose = Eigen::Matrix4f::Identity();
-            //This is for the point shader
+            // This is for the point shader
             colorProgram->setUniform(Uniform("pose", pose));
 
+            // 设置 Model View 对应的虚拟观察相机光心处设置为光心
             Eigen::Matrix4f modelView = mv;
-
             Eigen::Vector3f lightpos = modelView.topRightCorner(3, 1);
-
             colorProgram->setUniform(Uniform("lightpos", lightpos));
 
+            // step 3 // ? 下面的全部都看不懂了... 一些图像设置
             glBindBuffer(GL_ARRAY_BUFFER, model.first);
 
+            // 注意到这里的 glEnableVertexAttribArray 和后面的 glDisableVertexAttribArray 是成对出现的
             glEnableVertexAttribArray(0);
             glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, Vertex::SIZE, 0);
 
@@ -473,26 +491,25 @@ class GUI
             glDisableVertexAttribArray(0);
             glDisableVertexAttribArray(1);
             glDisableVertexAttribArray(2);
+            // ? 解绑到id 0?
             glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-            colorFrameBuffer->Unbind();
-
-            colorProgram->Unbind();
-
-            glPopAttrib();
-
+            // step 4 解除和缓冲区的绑定, 卸载 GLSL 程序, 弹出先前的设置, 恢复现场xuanran
             fxaaProgram->Bind();
 
             glActiveTexture(GL_TEXTURE0);
+            // ? 绑定输出纹理
             glBindTexture(GL_TEXTURE_2D, colorTexture->texture->tid);
 
+            // 传参 - 分辨率
             Eigen::Vector2f resolution(renderBuffer->width, renderBuffer->height);
-
-            fxaaProgram->setUniform(Uniform("tex", 0));
+            fxaaProgram->setUniform(Uniform("tex", 0));                     // ? 有何意义？
             fxaaProgram->setUniform(Uniform("resolution", resolution));
 
+            // ? 绘制
             glDrawArrays(GL_POINTS, 0, 1);
 
+            // step 6 结束, 卸载 GLSL 程序, 下面的好多还是看不懂
             fxaaProgram->Unbind();
 
             glBindFramebuffer(GL_READ_FRAMEBUFFER, colorFrameBuffer->fbid);
@@ -503,6 +520,7 @@ class GUI
 
             glBindTexture(GL_TEXTURE_2D, 0);
 
+            // 调用 GPU 立即根据指令缓冲进行绘制操作
             glFinish();
         }
 
@@ -536,7 +554,7 @@ class GUI
                             * drawTimes,                    ///< panel - 是否按照创建的时间先后顺序对 Surfel 进行着色(仅对Surfel有效)
                             * drawFerns,                    ///< panel - 是否显示随机蕨数据库中的图像对应的的相机位置
                             * drawDeforms,                  ///< panel - 是否绘制 Local Loop 和 Global Loop 对构建模型的畸变矫正操作?
-                            * drawWindow;                   ///? panel - 是否绘制时间窗口(时间窗口外的surfel将会以半透明状态?显示)
+                            * drawWindow;                   ///< panel - 是否绘制时间窗口(时间窗口外的surfel将会以半透明状态?显示)
             
         // Panel 上的变量 - 只读
         pangolin::Var<int> * gpuMem;                        ///< panel - 当前空闲的显存大小, 单位MB
@@ -551,7 +569,7 @@ class GUI
 
         // Panel 上的变量 - 设置
         pangolin::Var<float> * confidenceThreshold,         ///< Raw data fusion confidence threshold
-                             * depthCutoff,                 ///? 深度值的切断处
+                             * depthCutoff,                 ///< 深度值的切断处
                              * icpWeight;                   ///< 设置 Weight for ICP in tracking, 也就是几何误差和色彩误差相互的权重
 
         pangolin::DataLog resLog, inLog;                    ///< 记录ICP过程残差和内点的数据记录器
@@ -561,10 +579,10 @@ class GUI
         pangolin::OpenGlRenderState s_cam;                  ///< 三维场景渲染器
 
         pangolin::GlRenderBuffer *  renderBuffer;           ///? 渲染缓存? 好像和深度缓存有关系
-        pangolin::GlFramebuffer *   colorFrameBuffer;       ///? 帧缓存? 和上面的有什么区别? 貌似这个包含上面的那个
-        GPUTexture *                colorTexture;           ///? 当前帧彩色图像的纹理
-        std::shared_ptr<Shader>     colorProgram;           ///? 存储用于正常着色的着色器程序
-        std::shared_ptr<Shader>     fxaaProgram;            ///? 存储用于去锯齿的着色器程序...
+        pangolin::GlFramebuffer *   colorFrameBuffer;       ///? 帧缓存? 和上面的有什么区别? 貌似这个包含上面的那个; 用于fxaa第一阶段
+        GPUTexture *                colorTexture;           ///? 当前帧彩色图像的纹理? 用于 fxaa 第二阶段
+        std::shared_ptr<Shader>     colorProgram;           ///? 存储用于正常着色的着色器对象, 用于 fxaa 渲染第一阶段
+        std::shared_ptr<Shader>     fxaaProgram;            ///? 存储用于去锯齿的着色器对象, 用于 fxaa 渲染第二阶段
 };
 
 

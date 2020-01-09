@@ -30,6 +30,8 @@
 #ifndef SHADERS_SHADERS_H_
 #define SHADERS_SHADERS_H_
 
+// FUTURE_TODO 掌握了着色器的基本知识之后再来检查
+
 // GLSL
 #include <pangolin/gl/glsl.h>
 // STL
@@ -37,7 +39,7 @@
 
 // 命令行参数解析
 #include "../Utils/Parse.h"
-// ?
+// 统一数据接口的类
 #include "Uniform.h"
 
 /** @brief ElasticFusion 对 GLSL 语言程序的封装 */
@@ -48,15 +50,29 @@ class Shader : public pangolin::GlSlProgram
         Shader()
         {}
 
+        /**
+         * @brief 获取链接后的 GLSL 程序id
+         * @return GLuint id
+         */
         GLuint programId()
         {
             return prog;
         }
 
+        /**
+         * @brief // ? 加载 uniform 数据块到着色器?
+         * @param[in] v Uniform 对象, 统一了能用到的各种数据类型
+         */
         void setUniform(const Uniform & v)
         {
-            GLuint loc = glGetUniformLocation(prog, v.id.c_str());
 
+            // ref: [https://www.cnblogs.com/android-blogs/p/5454692.html]
+            GLuint loc = glGetUniformLocation(      // uniform 变量在 uniform 变量列表中的索引值
+                            prog,                   // 链接后的 GLSL 程序id
+                            v.id.c_str());          // uniform 在着色器程序代码中的变量名
+
+
+            // 根据数据的不同类型调用不同的送数据函数
             switch(v.t)
             {
                 case Uniform::INT:

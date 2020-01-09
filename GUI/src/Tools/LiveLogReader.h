@@ -66,7 +66,6 @@ class LiveLogReader : public LogReader
 
   /**
    * @brief 构造函数
-   * 
    * @param[in] file         记录文件, 这里实际上只用于构造父类对象, 并没有真正使用
    * @param[in] flipColors   是否左右翻转图像
    * @param[in] type         摄像头的类型

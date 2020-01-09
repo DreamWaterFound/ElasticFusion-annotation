@@ -39,7 +39,7 @@ MainController::MainController(int argc, char * argv[])
    gui(0),                          // GUI 窗口对象指针
    groundTruthOdometry(0),          // 处理位姿轨迹真值的对象(当然位姿真值从外部输入的)
    logReader(0),                    // 数据源
-   framesToSkip(0),                 // ?  是否
+   framesToSkip(0),                 // 清除因为"仿真实时性"而需要跳帧的个数
    resetButton(false),              // 复位按钮是否被按下
    resizeStream(0)                  // Resize 器, 借助 GPU Shader 实现
 {
@@ -124,7 +124,7 @@ MainController::MainController(int argc, char * argv[])
 
     // 是否命令行参数中指定了 -nso , 如果指定了结果为 false; Disables SO(3) pre-alignment in tracking
     so3 = !(Parse::get().arg(argc, argv, "-nso", empty) > -1);
-    // ? 什么的边界? 帧数的？ 
+    // 当前 ElasticFusion 能够处理的帧数的上界
     end = std::numeric_limits<unsigned short>::max(); // Funny bound, since we predict times in this format really!
 
     // 从命令行参数中更新这些数值
@@ -258,7 +258,8 @@ void MainController::launch()
             logReader->rewind();
             // 重新构建 ElasticFusion
             eFusion = new ElasticFusion(
-                openLoop ? std::numeric_limits<int>::max() / 2 : timeDelta,     // 如果不使用闭环就没有必要设置时间窗口的长度 // ? 但是这里除2是为什么?
+                openLoop ? std::numeric_limits<int>::max() / 2 : timeDelta,     // 如果不使用闭环就没有必要设置时间窗口的长度 
+                                                                                // ? 但是这里除2是为什么?
                 icpCountThresh,                                                 // Local loop closure inlier threshold
                 icpErrThresh,                                                   // Local loop closure residual threshold
                 covThresh,                                                      // Local loop closure covariance threshold
@@ -520,7 +521,7 @@ void MainController::run()
         // 如果需要绘制当前帧点云信息
         if(gui->drawRawCloud->Get() || gui->drawFilteredCloud->Get())
         {
-            // ? 没看懂这个函数是干什么的, 好像是计算原始点云和滤波后的点云(对, 同时计算, 不管你是否只选中了其中的一个)
+            // 计算原始点云和滤波后的点云(对, 同时计算, 不管你是否只选中了其中的一个)
             // Calculate the above for the current frame (only done on the first frame normally)
             eFusion->computeFeedbackBuffers();
         }

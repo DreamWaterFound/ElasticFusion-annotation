@@ -1,3 +1,14 @@
+/**
+ * @file RealSenseInterface.cpp
+ * @author guoqing (1337841346@qq.com)
+ * @brief RealSence 相机的接口. 由于使用的接口太老了, 这里就不分析了
+ * @version 0.1
+ * @date 2020-01-09
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 #include "RealSenseInterface.h"
 #include <functional>
 

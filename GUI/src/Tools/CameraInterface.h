@@ -11,12 +11,13 @@
 
 #pragma once
 
+// STL
 #include <string>
 #include <iostream>
 #include <algorithm>
 #include <map>
 
-// ?
+// 加强的线程互斥锁对象
 #include "ThreadMutexObject.h"
 
 /** @brief 相机接口虚基类 */
