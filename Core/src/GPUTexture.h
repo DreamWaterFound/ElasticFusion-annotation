@@ -72,7 +72,7 @@ class GPUTexture
         pangolin::GlTexture * texture;          ///< OpenGL 中的纹理对象句柄
         cudaGraphicsResource * cudaRes;         ///? OpenGL 纹理对象注册到CUDA中后的资源句柄
 
-        const bool draw;                        ///? 是否绘制
+        const bool draw;                        ///? 是否绘制? 还是是否可以绘制? 感觉这个纹理也会存储一些不可绘制的对象, 比如顶点, 比如法向
 
     private:
         /** @brief 无参构造函数 */

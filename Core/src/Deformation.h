@@ -1,3 +1,14 @@
+/**
+ * @file Deformation.h
+ * @author guoqing (1337841346@qq.com)
+ * @brief Deformation 对象, 包含 Deformation Graph 对象
+ * @version 0.1
+ * @date 2020-01-09
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -31,12 +42,17 @@
 
 #include <pangolin/gl/gl.h>
 
+/** @brief Deformation 对象, 包含 Deformation Graph 对象 */
 class Deformation
 {
     public:
         Deformation();
         virtual ~Deformation();
 
+        /**
+         * @brief 获取 Deformation Graph 的节点
+         * @return getGraph Nodes
+         */
         EFUSION_API std::vector<GraphNode*> & getGraph();
 
         void getRawGraph(std::vector<float> & graph);
@@ -106,7 +122,7 @@ class Deformation
         }
 
     private:
-        DeformationGraph def;
+        DeformationGraph def;                               ///? 真正的 Deformation Graph? 
 
         std::vector<unsigned long long int> vertexTimes;
         std::vector<Eigen::Vector3f> pointPool;

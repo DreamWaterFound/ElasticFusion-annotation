@@ -259,17 +259,17 @@ class ElasticFusion
 
         //Here be dragons
     private:
-        IndexMap indexMap;
+        IndexMap indexMap;                      ///< 包含了 Predicted 的图像
         RGBDOdometry frameToModel;
         RGBDOdometry modelToModel;              ///< 实现追踪的类, 用于 model to model 的追踪
         GlobalModel globalModel;                ///< Surfel Map
         FillIn fillIn;
-        Ferns ferns;
-        Deformation localDeformation;
-        Deformation globalDeformation;
+        Ferns ferns;                            ///< 随机蕨数据库对象
+        Deformation localDeformation;           ///< Local deformation graph
+        Deformation globalDeformation;          ///< Global deformation graph
 
         const std::string saveFilename;
-        std::map<std::string, GPUTexture*> textures;
+        std::map<std::string, GPUTexture*> textures;    ///< 原始输入图像的纹理, //? 第一个元素是字符串描述, 第二个元素是GPU纹理对象句柄?
         std::map<std::string, ComputePack*> computePacks;
         std::map<std::string, FeedbackBuffer*> feedbackBuffers;     ///? 存储点云的?
 
@@ -294,12 +294,12 @@ class ElasticFusion
         const float icpErrThresh;
         const float covThresh;
 
-        int deforms;
-        int fernDeforms;
+        int deforms;                        ///< Local Loop 触发的 defomration 的次数
+        int fernDeforms;                    ///< Global Loop 触发的 defomration 的次数
         const int consSample;
         Resize resize;
 
-        std::vector<PoseMatch> poseMatches;
+        std::vector<PoseMatch> poseMatches;             ///< the list of deformation constraints
         std::vector<Deformation::Constraint> relativeCons;
 
         std::vector<std::pair<unsigned long long int, Eigen::Matrix4f> > poseGraph;
@@ -318,15 +318,15 @@ class ElasticFusion
         int trackingCount;
         const float maxDepthProcessed;
 
-        bool rgbOnly;
-        float icpWeight;
-        bool pyramid;
+        bool rgbOnly;                       ///< 是否只使用 2.5D RGB-only Lucas-Kanade tracking // ? 2.5D
+        float icpWeight;                    ///< Weight for ICP in tracking, 也就是几何误差和色彩误差相互的权重
+        bool pyramid;                       ///< 设置是否使用图像金字塔进行追踪
         bool fastOdom;
-        float confidenceThreshold;          ///< The point fusion confidence threshold
+        float confidenceThreshold;          ///< The point fusion confidence threshold = Raw data fusion confidence threshold
         float fernThresh;
-        bool so3;
-        bool frameToFrameRGB;
-        float depthCutoff;
+        bool so3;                           ///< Turns on or off SO(3) alignment bootstrapping
+        bool frameToFrameRGB;               ///< Turns on or off frame to frame tracking for RGB
+        float depthCutoff;                  ///< 原始图像的深度切断值, 超过这个值的深度信息我们认为不准, 不要了
 };
 
 #endif /* ELASTICFUSION_H_ */

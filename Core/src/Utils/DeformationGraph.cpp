@@ -43,6 +43,7 @@ DeformationGraph::~DeformationGraph()
     delete cholesky;
 }
 
+// 获取 Nodes 
 std::vector<GraphNode *> & DeformationGraph::getGraph()
 {
     return graph;

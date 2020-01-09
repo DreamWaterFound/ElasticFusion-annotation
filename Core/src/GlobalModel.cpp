@@ -602,6 +602,7 @@ void GlobalModel::clean(const Eigen::Matrix4f & pose,
     TOCK("Fuse::Copy");
 }
 
+// 获取 Global Model 中点的数目
 unsigned int GlobalModel::lastCount()
 {
     return count;

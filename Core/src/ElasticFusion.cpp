@@ -706,6 +706,7 @@ void ElasticFusion::filterDepth()
     computePacks[ComputePack::FILTER]->compute(textures[GPUTexture::DEPTH_RAW]->texture, &uniforms);
 }
 
+// 使用给定的上下限, 渲染深度图到纹理
 void ElasticFusion::normaliseDepth(const float & minVal, const float & maxVal)
 {
     std::vector<Uniform> uniforms;
@@ -716,6 +717,7 @@ void ElasticFusion::normaliseDepth(const float & minVal, const float & maxVal)
     computePacks[ComputePack::NORM]->compute(textures[GPUTexture::DEPTH_RAW]->texture, &uniforms);
 }
 
+// Saves out a .ply mesh file of the current model
 void ElasticFusion::savePly()
 {
     std::string filename = saveFilename;
@@ -865,7 +867,8 @@ Eigen::Vector3f ElasticFusion::rodrigues2(const Eigen::Matrix3f& matrix)
     return Eigen::Vector3d(rx, ry, rz).cast<float>();
 }
 
-//Sad times ahead
+// ? Sad times ahead < 作者说的是啥意思?
+// 获取 Predicted 的图像
 IndexMap & ElasticFusion::getIndexMap()
 {
     return indexMap;
@@ -877,21 +880,25 @@ GlobalModel & ElasticFusion::getGlobalModel()
     return globalModel;
 }
 
+// 获取随机蕨数据库
 Ferns & ElasticFusion::getFerns()
 {
     return ferns;
 }
 
+// 获取 Local Deformation Graph
 Deformation & ElasticFusion::getLocalDeformation()
 {
     return localDeformation;
 }
 
+// 获取原始图像的纹理
 std::map<std::string, GPUTexture*> & ElasticFusion::getTextures()
 {
     return textures;
 }
 
+// 获取 the list of deformation constraints
 const std::vector<PoseMatch> & ElasticFusion::getPoseMatches()
 {
     return poseMatches;
@@ -909,16 +916,19 @@ const float & ElasticFusion::getConfidenceThreshold()
     return confidenceThreshold;
 }
 
+// 设置是否只使用 2.5D RGB-only Lucas-Kanade tracking // ? 2.5D
 void ElasticFusion::setRgbOnly(const bool & val)
 {
     rgbOnly = val;
 }
 
+// 设置 Weight for ICP in tracking, 也就是几何误差和色彩误差相互的权重
 void ElasticFusion::setIcpWeight(const float & val)
 {
     icpWeight = val;
 }
 
+// 设置是否使用图像金字塔进行追踪
 void ElasticFusion::setPyramid(const bool & val)
 {
     pyramid = val;
@@ -929,16 +939,19 @@ void ElasticFusion::setFastOdom(const bool & val)
     fastOdom = val;
 }
 
+// Turns on or off SO(3) alignment bootstrapping
 void ElasticFusion::setSo3(const bool & val)
 {
     so3 = val;
 }
 
+// Turns on or off frame to frame tracking for RGB
 void ElasticFusion::setFrameToFrameRGB(const bool & val)
 {
     frameToFrameRGB = val;
 }
 
+// 设置 Raw data fusion confidence threshold
 void ElasticFusion::setConfidenceThreshold(const float & val)
 {
     confidenceThreshold = val;
@@ -949,6 +962,7 @@ void ElasticFusion::setFernThresh(const float & val)
     fernThresh = val;
 }
 
+// 设置原始图像的深度切断值
 void ElasticFusion::setDepthCutoff(const float & val)
 {
     depthCutoff = val;
@@ -989,11 +1003,13 @@ const Eigen::Matrix4f & ElasticFusion::getCurrPose()
     return currPose;
 }
 
+// 获取由 Local Loop 触发的 defomration 的次数
 const int & ElasticFusion::getDeforms()
 {
     return deforms;
 }
 
+// 获取由 Global Loop 进行的 deformation 的次数
 const int & ElasticFusion::getFernDeforms()
 {
     return fernDeforms;

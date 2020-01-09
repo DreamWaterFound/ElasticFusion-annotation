@@ -31,6 +31,7 @@
 
 class CholeskyDecomp;
 
+/** @brief DeformationGraph, 真正的变形图对象 */
 class DeformationGraph
 {
     public:
@@ -86,6 +87,10 @@ class DeformationGraph
                 }
         };
 
+        /**
+         * @brief 获取 DeformationGraph 的 Nodes
+         * @return std::vector<GraphNode *>& Nodes
+         */
         std::vector<GraphNode *> & getGraph();
         std::vector<unsigned long long int> & getGraphTimes();
 
@@ -123,7 +128,7 @@ class DeformationGraph
 
         //Graph itself
         std::vector<GraphNode> graphNodes;
-        std::vector<GraphNode *> graph;
+        std::vector<GraphNode *> graph;         ///< Deformation Graph 的 Nodes
 
         //Maps vertex indices to neighbours and weights
         std::vector<std::vector<VertexWeightMap> > vertexMap;

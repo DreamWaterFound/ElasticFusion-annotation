@@ -1,3 +1,14 @@
+/**
+ * @file GraphNode.h
+ * @author guoqing (1337841346@qq.com)
+ * @brief Deformation Node Type
+ * @version 0.1
+ * @date 2020-01-09
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -21,6 +32,7 @@
 
 #include <Eigen/Dense>
 
+/** @brief Deformation Graph Node */
 class GraphNode
 {
     public:

@@ -145,7 +145,7 @@ MainController::MainController(int argc, char * argv[])
 
     
     // ! 有个问题, 如果 groundTruthOdometry 并未初始化, 则这个指针可能不是 nullptr
-    openLoop        = !groundTruthOdometry && Parse::get().arg(argc, argv, "-o", empty) > -1;       // ? Open loop mode
+    openLoop        = !groundTruthOdometry && Parse::get().arg(argc, argv, "-o", empty) > -1;       // Open loop mode, 不使用闭环
     reloc           = Parse::get().arg(argc, argv, "-rl", empty) > -1;                              // Enable relocalisation
     frameskip       = Parse::get().arg(argc, argv, "-fs", empty) > -1;                              // Frame skip if processing a log to simulate real-time
     quiet           = Parse::get().arg(argc, argv, "-q", empty) > -1;                               // Quit when finished a log
@@ -160,7 +160,7 @@ MainController::MainController(int argc, char * argv[])
 
     // 设置 Viewer 中的一些变量
     gui->flipColors->Ref().Set(logReader->flipColors);      // 彩色通道翻转
-    gui->rgbOnly->Ref().Set(false);                         // ? 仅使用rgb?
+    gui->rgbOnly->Ref().Set(false);                         // 是否仅使用 2.5D RGB-only Lucas-Kanade tracking // ? 2.5D?
     gui->pyramid->Ref().Set(true);                          // 使用图像金字塔
     gui->fastOdom->Ref().Set(fastOdom);                     // 使用快速视觉里程计模式()
     gui->confidenceThreshold->Ref().Set(confidence);        // 设置 Surfel confidence threshold
@@ -596,43 +596,49 @@ void MainController::run()
         gui->drawFrustum(pose);
         glColor3f(1, 1, 1);
 
-        // =====================
+        // step 2.7 绘制 Fern 
         if(gui->drawFerns->Get())
         {
+            // 绘制成为黑色
             glColor3f(0, 0, 0);
+            // 遍历随机蕨数据库中的所有帧
             for(size_t i = 0; i < eFusion->getFerns().frames.size(); i++)
             {
+                // ? 原则上每次遍历应该只有一帧才会被显示, 但是为什么我亲自实验的时候却几乎是所有的帧都显示了呢?
                 if((int)i == eFusion->getFerns().lastClosest)
                     continue;
-
+                // 只绘制匹配上的那一帧的帧
                 gui->drawFrustum(eFusion->getFerns().frames.at(i)->pose);
             }
             glColor3f(1, 1, 1);
         }
 
+        // step 2.7 绘制 Deformation Graph
         if(gui->drawDefGraph->Get())
         {
+            // 获取并绘制每一个 Deformation Graph 的 Nodes
             const std::vector<GraphNode*> & graph = eFusion->getLocalDeformation().getGraph();
-
             for(size_t i = 0; i < graph.size(); i++)
             {
-                pangolin::glDrawCross(graph.at(i)->position(0),
+                // Node 本身, 绘制交点
+                pangolin::glDrawCross(graph.at(i)->position(0),     // 位置
                                       graph.at(i)->position(1),
                                       graph.at(i)->position(2),
-                                      0.1);
-
+                                      0.1);                         // 大小
+                // 绘制每个 Node 相邻的边
                 for(size_t j = 0; j < graph.at(i)->neighbours.size(); j++)
                 {
-                    pangolin::glDrawLine(graph.at(i)->position(0),
+                    pangolin::glDrawLine(graph.at(i)->position(0),                                  // 第一个点的位置
                                          graph.at(i)->position(1),
                                          graph.at(i)->position(2),
-                                         graph.at(graph.at(i)->neighbours.at(j))->position(0),
+                                         graph.at(graph.at(i)->neighbours.at(j))->position(0),      // 第二个点的位置
                                          graph.at(graph.at(i)->neighbours.at(j))->position(1),
                                          graph.at(graph.at(i)->neighbours.at(j))->position(2));
-                }
-            }
+                } // 绘制每个 Node 相邻的边
+            } // 绘制每个 Node
         }
 
+        // step 2.8 无论是否指定绘制随机蕨数据库中的帧位置, 都要绘制和当前帧具有最佳匹配的帧的位姿
         if(eFusion->getFerns().lastClosest != -1)
         {
             glColor3f(1, 0, 0);
@@ -640,8 +646,9 @@ void MainController::run()
             glColor3f(1, 1, 1);
         }
 
+        // step 2.9 绘制 deformation 约束, 可以理解为经过 Local Loop 和 Global Loop 之后的约束
         const std::vector<PoseMatch> & poseMatches = eFusion->getPoseMatches();
-
+        // 统计所有的 PoseMatch 中距离最大的那个 // ! 但是下面的这个 maxDiff 其实没有用到
         int maxDiff = 0;
         for(size_t i = 0; i < poseMatches.size(); i++)
         {
@@ -653,16 +660,22 @@ void MainController::run()
 
         for(size_t i = 0; i < poseMatches.size(); i++)
         {
+            // ! 这个 if 判断感觉放在 for 循环外面更好
             if(gui->drawDeforms->Get())
             {
+                // 根据来源的不同进行着色
                 if(poseMatches.at(i).fern)
                 {
+                    // Gloabl Loop - 红色
                     glColor3f(1, 0, 0);
                 }
                 else
                 {
+                    // Local Loop - 绿色
                     glColor3f(0, 1, 0);
                 }
+
+                // 绘制其中的所有源点和目标点的约束关系
                 for(size_t j = 0; j < poseMatches.at(i).constraints.size(); j++)
                 {
                     pangolin::glDrawLine(poseMatches.at(i).constraints.at(j).sourcePoint(0), poseMatches.at(i).constraints.at(j).sourcePoint(1), poseMatches.at(i).constraints.at(j).sourcePoint(2),
@@ -672,88 +685,108 @@ void MainController::run()
         }
         glColor3f(1, 1, 1);
 
-        eFusion->normaliseDepth(0.3f, gui->depthCutoff->Get());
-
+        // step 2.10 绘制和显示小的View的图像(//? 只有输入的两个吧)
+        // 首先绘制裁剪过后的深度图像
+        eFusion->normaliseDepth(0.3f,                       // 显示的深度图中的最小值
+                                gui->depthCutoff->Get());   // 显示的深度图中的最大值
+        // 显示这些纹理
         for(std::map<std::string, GPUTexture*>::const_iterator it = eFusion->getTextures().begin(); it != eFusion->getTextures().end(); ++it)
         {
+            // 如果这个纹理可显示
             if(it->second->draw)
             {
                 gui->displayImg(it->first, it->second);
             }
         }
 
+        // step 2.11 绘制并显示 predicted 的图像
+        // 绘制 predicted 的深度图像
         eFusion->getIndexMap().renderDepth(gui->depthCutoff->Get());
 
+        // 显示, 上者是彩色图像, 下者是深度图像
         gui->displayImg("ModelImg", eFusion->getIndexMap().imageTex());
         gui->displayImg("Model", eFusion->getIndexMap().drawTex());
 
+        // step 2.12 其他的一些状态量的更新, 并且结束绘制
+        // Global Model 中点的数目
         std::stringstream strs;
         strs << eFusion->getGlobalModel().lastCount();
-
         gui->totalPoints->operator=(strs.str());
 
+        // 获取 Deformation Graph 中 Node 的数目 -- 不过这里的变量命名也是够了...
         std::stringstream strs2;
         strs2 << eFusion->getLocalDeformation().getGraph().size();
-
         gui->totalNodes->operator=(strs2.str());
 
+        // 获取随机蕨数据库中帧的数目
         std::stringstream strs3;
         strs3 << eFusion->getFerns().frames.size();
-
         gui->totalFerns->operator=(strs3.str());
 
+        // 获取由于 Local Loop 进行的 deformation 的次数
         std::stringstream strs4;
         strs4 << eFusion->getDeforms();
-
         gui->totalDefs->operator=(strs4.str());
 
+        // 获取当前已经处理的帧数/总帧数
         std::stringstream strs5;
         strs5 << eFusion->getTick() << "/" << logReader->getNumFrames();
-
         gui->logProgress->operator=(strs5.str());
 
+        // 获取由于 Global Loop 进行的 deformation 的次数
         std::stringstream strs6;
         strs6 << eFusion->getFernDeforms();
-
         gui->totalFernDefs->operator=(strs6.str());
 
+        // 统计并统计并计算剩余的显存, 结束当前Pangolin帧的绘制
         gui->postCall();
 
-        logReader->flipColors = gui->flipColors->Get();
-        eFusion->setRgbOnly(gui->rgbOnly->Get());
-        eFusion->setPyramid(gui->pyramid->Get());
-        eFusion->setFastOdom(gui->fastOdom->Get());
-        eFusion->setConfidenceThreshold(gui->confidenceThreshold->Get());
-        eFusion->setDepthCutoff(gui->depthCutoff->Get());
-        eFusion->setIcpWeight(gui->icpWeight->Get());
-        eFusion->setSo3(gui->so3->Get());
-        eFusion->setFrameToFrameRGB(gui->frameToFrameRGB->Get());
+        // step 3 结合 GUI 界面的输入, 及时更新 logReader 和 ElasticFusion 的状态
+        logReader->flipColors = gui->flipColors->Get();                     // 是否交换颜色通道
+        eFusion->setRgbOnly(gui->rgbOnly->Get());                           // 是否只使用 2.5D RGB-only Lucas-Kanade tracking // ? 2.5D
+        eFusion->setPyramid(gui->pyramid->Get());                           // 是否使用图像金字塔进行追踪
+        eFusion->setFastOdom(gui->fastOdom->Get());                         // 是否运行于快速的里程计模式(不建图, 单层金字塔)
+        eFusion->setConfidenceThreshold(gui->confidenceThreshold->Get());   // Raw data fusion confidence threshold
+        eFusion->setDepthCutoff(gui->depthCutoff->Get());                   // 设置深度切断值(大于这个距离的深度我们不要了)
+        eFusion->setIcpWeight(gui->icpWeight->Get());                       // 设置 Weight for ICP in tracking, 也就是几何误差和色彩误差相互的权重
+        eFusion->setSo3(gui->so3->Get());                                   // 是否 Disables SO(3) pre-alignment in tracking
+        eFusion->setFrameToFrameRGB(gui->frameToFrameRGB->Get());           // 是否使用帧-帧RGB方式的位姿估计
 
+        // 获取当前是否要求复位
         resetButton = pangolin::Pushed(*gui->reset);
 
+        // 是否使用 live camera 的自动曝光和自动白平衡设置
+        // BUG 如果 autoSettings 为 False 的话, 循环体内的语句不执行啊
         if(gui->autoSettings)
         {
+            // 那之前也是这样吗
             static bool last = gui->autoSettings->Get();
-
             if(gui->autoSettings->Get() != last)
             {
+                // 之前不是这样, 说明是刚刚按下的按钮, 我们要打开相机的相关设置
                 last = gui->autoSettings->Get();
                 static_cast<LiveLogReader *>(logReader)->setAuto(last);
             }
         }
 
+        // 统计完成了所有模块的运行时间数据, 发送
+        // ! 但是这个时候 GUI 模块的运行时间还没有统计完成呢?
         Stopwatch::getInstance().sendAll();
 
+        // 如果已经要求复位了后面的东西就不需要执行了 
+        // ! 这行代码可以出现在更前面
         if(resetButton)
         {
             break;
         }
 
+        // 如果要保存 Global Model 到磁盘文件
         if(pangolin::Pushed(*gui->save))
         {
             eFusion->savePly();
         }
 
+        // GUI 界面的内容绘制完成
         TOCK("GUI");
     }
 }

@@ -1,3 +1,14 @@
+/**
+ * @file Deformation.cpp
+ * @author guoqing (1337841346@qq.com)
+ * @brief Deformation 对象, 包含 Deformation Graph 对象
+ * @version 0.1
+ * @date 2020-01-09
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -61,6 +72,7 @@ Deformation::~Deformation()
     delete graphPosePoints;
 }
 
+// 获取 Deformation Graph 的节点
 std::vector<GraphNode*> & Deformation::getGraph()
 {
     return def.getGraph();

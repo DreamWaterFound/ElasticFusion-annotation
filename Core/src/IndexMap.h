@@ -1,3 +1,14 @@
+/**
+ * @file IndexMap.h
+ * @author guoqing (1337841346@qq.com)
+ * @brief 用于保存 Predicted 的图像
+ * @version 0.1
+ * @date 2020-01-09
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -16,6 +27,7 @@
  *
  */
 
+
 #ifndef INDEXMAP_H_
 #define INDEXMAP_H_
 
@@ -30,6 +42,7 @@
 
 #include "Defines.h"
 
+/** @brief // ?  用于保存 predicted 的图像 */
 class IndexMap
 {
     public:
@@ -42,6 +55,10 @@ class IndexMap
                             const float depthCutoff,
                             const int timeDelta);
 
+        /**
+         * @brief 按照给定的最大深度阈值渲染深度图像
+         * @param[in] depthCutoff 最远的深度值
+         */
         EFUSION_API void renderDepth(const float depthCutoff);
 
         enum Prediction
@@ -102,6 +119,10 @@ class IndexMap
             return &depthTexture;
         }
 
+        /**
+         * @brief 获取 Predicted 的彩色图像纹理
+         * @return GPUTexture* 纹理
+         */
         GPUTexture * imageTex()
         {
             return &imageTexture;

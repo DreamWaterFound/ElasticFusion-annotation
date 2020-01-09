@@ -124,6 +124,17 @@ class GUI
             glDepthFunc(GL_LESS);       // 指定“目标像素与当前像素在z方向上值大小比较”的函数，符合该函数关系的目标像素才进行绘制，否则对目标像素不予绘制
 
             // step 3 子视图创建
+            /* 一共有这样几个视图id: 
+             * cam          Global Model 显示视图
+             * RGB          输入的原始彩色图像
+             * DEPTH_NORM   输入的原始彩色图像, 但是为了效果会对深度值进行裁切
+             * ModelImg     Global Model Prediction 的彩色图像
+             * Model        Global Model Prediction 的深度图像
+             * ui           Panel
+             * multi        RGB + DEPTH_NORM + ModelImg + Model + 两个Ploter组成的综合视图
+             */ 
+
+
             // 场景渲染器
             s_cam = pangolin::OpenGlRenderState(
                 pangolin::ProjectionMatrix(640, 480, 420, 420, 320, 240, 0.1, 1000),    // 投影矩阵
@@ -343,7 +354,7 @@ class GUI
                                      Resolution::getInstance().width(),         // 图像宽度
                                      Resolution::getInstance().height(),        // 图像高度
                                      pose,                                      // 相机位姿
-                                     0.5f);                                     // 大小                   
+                                     0.1f);                                     // 大小                   
 
             #else
             pangolin::glDrawFrustum(Kinv,
@@ -354,30 +365,37 @@ class GUI
             #endif
         }
 
+        /**
+         * @brief 绘制纹理到指定的View
+         * @param[in] id    View的id, 使用字符串表示
+         * @param[in] img   纹理对象
+         */
         void displayImg(const std::string & id, GPUTexture * img)
         {
+            // Showcase 模式下不输出
             if(showcaseMode)
                 return;
 
+            // ? 为什么要失能深度测试呢?
             glDisable(GL_DEPTH_TEST);
-
+            // 激活对应的 View, 然后执行渲染即可显示
             pangolin::Display(id).Activate();
             img->texture->RenderToViewport(true);
-
             glEnable(GL_DEPTH_TEST);
         }
 
+        /** @brief 统计并计算剩余的显存, 结束当前Pangolin帧的绘制 */
         void postCall()
         {
             GLint cur_avail_mem_kb = 0;
+            // 获取 kb 为单位的显存空余量
             glGetIntegerv(GL_GPU_MEM_INFO_CURRENT_AVAILABLE_MEM_NVX, &cur_avail_mem_kb);
-
+            // 转换成为 MB 表示
             int memFree = cur_avail_mem_kb / 1024;
-
             gpuMem->operator=(memFree);
-
+            
+            // 结束一次绘制
             pangolin::FinishFrame();
-
             glFinish();
         }
 
@@ -499,42 +517,42 @@ class GUI
                             * save,                         ///< panel - 保存按钮
                             * reset,                        ///< panel - 复位按钮
                             * flipColors,                   ///< panel - 是否翻转图像的颜色(RGB和BGR)
-                            * rgbOnly,                      ///? panel - 仅使用RGB图像进行相机位姿估计?
-                            * pyramid,                      ///< panel - 是否使用图像金字塔
-                            * so3,                          ///? panel - 是否使用SO3?
+                            * rgbOnly,                      ///< panel - 是否仅使用 2.5D RGB-only Lucas-Kanade tracking // ? 2.5D?
+                            * pyramid,                      ///< panel - 是否使用图像金字塔进行追踪
+                            * so3,                          ///< panel - 是否 Disables SO(3) pre-alignment in tracking
                             * frameToFrameRGB,              ///< panel - 是否使用帧-帧RGB方式的位姿估计
-                            * fastOdom,                     ///< panel - 是否运行于快速的里程计模式(不建图)
+                            * fastOdom,                     ///< panel - 是否运行于快速的里程计模式(不建图, 单层金字塔)
                             * followPose,                   ///< panel - 是否观察视角跟随相机位姿
                             * drawRawCloud,                 ///< panel - 是否绘制当前帧观测到的原始点云
                             * drawFilteredCloud,            ///< panel - 是否绘制滤波后的点云
                             * drawNormals,                  ///< panel - 是否绘制法向贴图(优先彩色贴图)
-                            * autoSettings,                 ///? panel - 是否使用自动设置?
+                            * autoSettings,                 ///< panel - 是否使用 live camera 的自动曝光和自动白平衡设置
                             * drawDefGraph,                 ///< panel - 是否绘制 deformation graph
                             * drawColors,                   ///< panel - 是否进行彩色贴图
-                            * drawFxaa,                     ///? panel - 是否应用快速近似抗锯齿效果绘制构建的模型?
+                            * drawFxaa,                     ///< panel - 是否应用快速近似抗锯齿效果绘制构建的模型?
                             * drawGlobalModel,              ///< panel - 是否绘制构建的全局模型
-                            * drawUnstable,                 ///? panel - 是否那些不稳定状态的点? (怎么定义不稳定?)
+                            * drawUnstable,                 ///< panel - 是否那些不稳定状态的点? (//? 怎么定义不稳定?)
                             * drawPoints,                   ///< panel - 是否不绘制Surfel而是以点云的方式绘制
                             * drawTimes,                    ///< panel - 是否按照创建的时间先后顺序对 Surfel 进行着色(仅对Surfel有效)
-                            * drawFerns,                    ///? panel - 是否显示随机蕨数据库中的图像?(相机位置)
+                            * drawFerns,                    ///< panel - 是否显示随机蕨数据库中的图像对应的的相机位置
                             * drawDeforms,                  ///< panel - 是否绘制 Local Loop 和 Global Loop 对构建模型的畸变矫正操作?
                             * drawWindow;                   ///? panel - 是否绘制时间窗口(时间窗口外的surfel将会以半透明状态?显示)
             
         // Panel 上的变量 - 只读
         pangolin::Var<int> * gpuMem;                        ///< panel - 当前空闲的显存大小, 单位MB
         pangolin::Var<std::string> * totalPoints,           ///< panel - 模型中点的总个数
-                                   * totalNodes,            ///? deformation graph 中的 node 总个数
-                                   * totalFerns,            ///? 随机蕨数据库中的帧总个数
-                                   * totalDefs,             ///? 总共进行的 deformation 次数
-                                   * totalFernDefs,         ///? ?
+                                   * totalNodes,            ///< deformation graph 中的 node 总个数
+                                   * totalFerns,            ///< 随机蕨数据库中的帧总个数
+                                   * totalDefs,             ///< 由 Local Loop 触发的 deformation 次数
+                                   * totalFernDefs,         ///< 由 Global Loop 触发的 deformation 次数
                                    * trackInliers,          ///< 当前 ICP 配准过程中的 Inlier 对数
                                    * trackRes,              ///< 当前 ICP 配准过程中的残差
-                                   * logProgress;           ///? 处理的图像帧数
+                                   * logProgress;           ///< "处理的图像帧数/记录文件总帧数"
 
         // Panel 上的变量 - 设置
-        pangolin::Var<float> * confidenceThreshold,         ///? 置信程度
+        pangolin::Var<float> * confidenceThreshold,         ///< Raw data fusion confidence threshold
                              * depthCutoff,                 ///? 深度值的切断处
-                             * icpWeight;                   ///? ICP 误差的...权重?
+                             * icpWeight;                   ///< 设置 Weight for ICP in tracking, 也就是几何误差和色彩误差相互的权重
 
         pangolin::DataLog resLog, inLog;                    ///< 记录ICP过程残差和内点的数据记录器
         pangolin::Plotter * resPlot,                        ///< 绘制ICP过程残差的绘图器

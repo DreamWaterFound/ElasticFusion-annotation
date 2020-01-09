@@ -99,6 +99,10 @@ class GlobalModel
                    const float maxDepth,
                    const bool isFern);
 
+        /**
+         * @brief 获取 Global Model 中点的数目
+         * @return lastCount 点的数目
+         */
         EFUSION_API unsigned int lastCount();
 
         Eigen::Vector4f * downloadMap();
@@ -111,7 +115,7 @@ class GlobalModel
         const int bufferSize;
 
         GLuint countQuery;
-        unsigned int count;
+        unsigned int count;                         ///< Global Model 中点的数目
 
         std::shared_ptr<Shader> initProgram;
         std::shared_ptr<Shader> drawProgram;

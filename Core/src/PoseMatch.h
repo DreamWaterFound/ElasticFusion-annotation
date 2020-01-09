@@ -22,6 +22,7 @@
 #include <Eigen/Core>
 #include "Ferns.h"
 
+/** @brief // ? 由于 Local Loop 和 Graph Loop 带来的配准对齐的约束? */
 class PoseMatch
 {
     public:
@@ -39,12 +40,12 @@ class PoseMatch
        fern(fern)
     {}
 
-    int firstId;
-    int secondId;
+    int firstId;                                        ///? 什么的id?
+    int secondId;                                       ///? 同上?
     Eigen::Matrix4f first;
     Eigen::Matrix4f second;
-    std::vector<Ferns::SurfaceConstraint> constraints;
-    bool fern;
+    std::vector<Ferns::SurfaceConstraint> constraints;  ///? 约束, 一对点一对点
+    bool fern;                                          ///< 是否是由 Global Loop 导致的
 };
 
 #endif /* POSEMATCH_H_ */

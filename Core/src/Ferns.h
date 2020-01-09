@@ -1,3 +1,14 @@
+/**
+ * @file Ferns.h
+ * @author guoqing (1337841346@qq.com)
+ * @brief 随机蕨数据库
+ * @version 0.1
+ * @date 2020-01-09
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -30,6 +41,7 @@
 #include "Utils/RGBDOdometry.h"
 #include "Shaders/Resize.h"
 
+/** @brief 随机蕨数据库 */
 class Ferns
 {
     public:
@@ -38,6 +50,7 @@ class Ferns
 
         bool addFrame(GPUTexture * imageTexture, GPUTexture * vertexTexture, GPUTexture * normalTexture, const Eigen::Matrix4f & pose, int srcTime, const float threshold);
 
+        /** @brief 由于 Local/Global Loop 带来的约束信息 */
         class SurfaceConstraint
         {
             public:
@@ -47,8 +60,8 @@ class Ferns
                    targetPoint(targetPoint)
                 {}
 
-                Eigen::Vector4f sourcePoint;
-                Eigen::Vector4f targetPoint;
+                Eigen::Vector4f sourcePoint;            ///< 源
+                Eigen::Vector4f targetPoint;            ///< 目标 //? 为什么是 Vecto4f? 第四维恒为1吗?
         };
 
         Eigen::Matrix4f findFrame(std::vector<SurfaceConstraint> & constraints,
@@ -72,6 +85,7 @@ class Ferns
 
         std::vector<Fern> conservatory;
 
+        /** @brief 帧类别, 用于随机蕨数据库 */
         class Frame
         {
             public:
@@ -136,7 +150,7 @@ class Ferns
                 Eigen::Vector4f * initNorms;
         };
 
-        std::vector<Frame*> frames;
+        std::vector<Frame*> frames;                         ///< 随机蕨数据库中的图像帧对象
 
         const int num;
         std::mt19937 random;
@@ -150,7 +164,7 @@ class Ferns
         std::uniform_int_distribution<int32_t> rgbDist;
         std::uniform_int_distribution<int32_t> dDist;
 
-        int lastClosest;
+        int lastClosest;                                    ///? 最近的和当前帧匹配的帧在 frames 中的id?
         const unsigned char badCode;
         RGBDOdometry rgbd;
 
