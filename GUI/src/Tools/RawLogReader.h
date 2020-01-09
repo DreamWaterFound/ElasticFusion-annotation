@@ -50,6 +50,17 @@
 #include <stack>
 
 
+/* 记录文件的数据格式: 
+ * 0x..00   int32_t     当前数据集中的帧数
+ * 0x..04   int64_t     第0帧数据的时间戳
+ * 0x..0C   int32_t         -深度图像数据长度 depthSize
+ * 0x..10   int32_t         -彩色图像数据长度 imageSize
+ * 0x..14   depthSize       -深度图像数据
+ * ..       imageSize       -彩色图像数据(不一定有)
+ * ..       int64_t     第1帧数据的时间戳
+*/
+
+
 /** @brief 原始记录文件读取器, 这个读取器负责读取原始记录文件 */
 class RawLogReader : public LogReader
 {

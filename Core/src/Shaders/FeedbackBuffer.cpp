@@ -18,6 +18,7 @@
 
 #include "FeedbackBuffer.h"
 
+/// 用于表示点云类型的字符串标签, 和后面的变量 FeedbackBuffer::feedbackBuffers 搭配使用
 const std::string FeedbackBuffer::RAW = "RAW";
 const std::string FeedbackBuffer::FILTERED = "FILTERED";
 
@@ -137,10 +138,10 @@ void FeedbackBuffer::compute(pangolin::GlTexture * color,
     glFinish();
 }
 
-void FeedbackBuffer::render(pangolin::OpenGlMatrix mvp,
-                            const Eigen::Matrix4f & pose,
-                            const bool drawNormals,
-                            const bool drawColors)
+void FeedbackBuffer::render(pangolin::OpenGlMatrix      mvp,
+                            const Eigen::Matrix4f &     pose,
+                            const bool                  drawNormals,
+                            const bool                  drawColors)
 {
     drawProgram->Bind();
 

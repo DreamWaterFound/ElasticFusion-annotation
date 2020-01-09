@@ -488,83 +488,115 @@ void MainController::run()
             gui->s_cam.SetModelViewMatrix(mv);
         }
 
-        // 进行绘制 MapViewer 的准备工作, 主要是清空各种缓冲区, 并且激活模型的绘制区域
+        // step 2.2 进行绘制 MapViewer 的准备工作, 主要是清空各种缓冲区, 并且激活模型的绘制区域
         gui->preCall();
 
+
+        // step 2.3 更新当前 ElasticFusion 的 ICP 状态
+        // 更新 ICP 过程中的 inlier 数
         std::stringstream stri;
         stri << eFusion->getModelToModel().lastICPCount;
         gui->trackInliers->Ref().Set(stri.str());
 
+        // 更新 ICP 过程最后的残差量
         std::stringstream stre;
         stre << (std::isnan(eFusion->getModelToModel().lastICPError) ? 0 : eFusion->getModelToModel().lastICPError);
         gui->trackRes->Ref().Set(stre.str());
 
+        // 当没有暂停键按下的时候
         if(!gui->pause->Get())
         {
-            gui->resLog.Log((std::isnan(eFusion->getModelToModel().lastICPError) ? std::numeric_limits<float>::max() : eFusion->getModelToModel().lastICPError), icpErrThresh);
-            gui->inLog.Log(eFusion->getModelToModel().lastICPCount, icpCountThresh);
+            gui->resLog.Log(
+                (std::isnan(eFusion->getModelToModel().lastICPError) ? std::numeric_limits<float>::max() : eFusion->getModelToModel().lastICPError), // 当前ICP误差
+                icpErrThresh);      // Local loop closure residual threshold
+            gui->inLog.Log(
+                eFusion->getModelToModel().lastICPCount,    // 内点的个数
+                icpCountThresh);    // Local loop closure inlier threshold
         }
 
+        // step 2.4 点云的绘制, 这里的 raw 和 filtered 的点云是可以同时显示的
         Eigen::Matrix4f pose = eFusion->getCurrPose();
 
+        // 如果需要绘制当前帧点云信息
         if(gui->drawRawCloud->Get() || gui->drawFilteredCloud->Get())
         {
+            // ? 没看懂这个函数是干什么的, 好像是计算原始点云和滤波后的点云(对, 同时计算, 不管你是否只选中了其中的一个)
+            // Calculate the above for the current frame (only done on the first frame normally)
             eFusion->computeFeedbackBuffers();
         }
 
+        // 绘制原始的点云
         if(gui->drawRawCloud->Get())
         {
-            eFusion->getFeedbackBuffers().at(FeedbackBuffer::RAW)->render(gui->s_cam.GetProjectionModelViewMatrix(), pose, gui->drawNormals->Get(), gui->drawColors->Get());
+            eFusion->getFeedbackBuffers().at(FeedbackBuffer::RAW)->render(
+                gui->s_cam.GetProjectionModelViewMatrix(),      // 渲染的时候相机所在的位姿
+                pose,                                           // 当前相机的位姿
+                gui->drawNormals->Get(),                        // 是否使用法向贴图
+                gui->drawColors->Get());                        // 是否使用 RGB 纹理贴图
         }
 
+        // 绘制经过滤波之后的点云
         if(gui->drawFilteredCloud->Get())
         {
             eFusion->getFeedbackBuffers().at(FeedbackBuffer::FILTERED)->render(gui->s_cam.GetProjectionModelViewMatrix(), pose, gui->drawNormals->Get(), gui->drawColors->Get());
         }
 
+        // step 2.5 Global 模型绘制, 这里 FXAA 的优先级高于普通的绘制方式
         if(gui->drawGlobalModel->Get())
         {
+            // 将 OpenGL 名列队列中的内容先送给显卡执行, 显卡绘制完成后该函数退出
+            // ref: [https://blog.csdn.net/stilling2006/article/details/5549306]
             glFinish();
             TICK("Global");
 
+            // 如果启用快速抗锯齿
             if(gui->drawFxaa->Get())
             {
-                gui->drawFXAA(gui->s_cam.GetProjectionModelViewMatrix(),
-                              gui->s_cam.GetModelViewMatrix(),
-                              eFusion->getGlobalModel().model(),
-                              eFusion->getConfidenceThreshold(),
-                              eFusion->getTick(),
-                              eFusion->getTimeDelta(),
-                              iclnuim);
+                gui->drawFXAA(gui->s_cam.GetProjectionModelViewMatrix(),        // 获取模型显示视图的投影矩阵
+                              gui->s_cam.GetModelViewMatrix(),                  // 获取虚拟观察相机以何种位姿观测, view matrix
+                              eFusion->getGlobalModel().model(),                // 获取 ElasticFusion 建立的 Global Model
+                              eFusion->getConfidenceThreshold(),                // The point fusion confidence threshold //? 为什么这两个函数都要使用这个东西?
+                              eFusion->getTick(),                               // 当前 ElasticFusion 已经处理过的帧数
+                              eFusion->getTimeDelta(),                          // 时间窗口的长度
+                              iclnuim);                                         // 是否使用 ICL-NUIM 数据集
             }
             else
             {
-                eFusion->getGlobalModel().renderPointCloud(gui->s_cam.GetProjectionModelViewMatrix(),
-                                                           eFusion->getConfidenceThreshold(),
-                                                           gui->drawUnstable->Get(),
-                                                           gui->drawNormals->Get(),
-                                                           gui->drawColors->Get(),
-                                                           gui->drawPoints->Get(),
-                                                           gui->drawWindow->Get(),
-                                                           gui->drawTimes->Get(),
-                                                           eFusion->getTick(),
-                                                           eFusion->getTimeDelta());
+                // 不然就正常绘制
+                eFusion->getGlobalModel().renderPointCloud(                     
+                            gui->s_cam.GetProjectionModelViewMatrix(),          // 获取虚拟观察相机以何种位姿观测, view matrix
+                            eFusion->getConfidenceThreshold(),                  // The point fusion confidence threshold
+                            gui->drawUnstable->Get(),                           // 是否绘制 unstable 的点
+                            gui->drawNormals->Get(),                            // 是否法线贴图
+                            gui->drawColors->Get(),                             // 是否 RGB 纹理贴图
+                            gui->drawPoints->Get(),                             // 是否以点云而不是以 Surfel 的方式绘图
+                            gui->drawWindow->Get(),                             // 是否绘制时间窗口
+                            gui->drawTimes->Get(),                              // 是否按照面元的创建时间进行着色(但是当使用点的显示方式时不会有效)
+                            eFusion->getTick(),                                 // 当前 ElasticFusion 已经处理过的帧数
+                            eFusion->getTimeDelta());                           // 时间窗口的长度
             }
+
+            // 送GPU进行绘图
             glFinish();
             TOCK("Global");
         }
 
+        // step 2.6 绘制相机位姿的表示
         if(eFusion->getLost())
         {
+            // 跟丢了, 显示成为黄色 --  但是只有在命令行中启用重定位才会处于这种状态
             glColor3f(1, 1, 0);
         }
         else
         {
+            // 正常没有跟丢的状态, 则显示成为洋红
             glColor3f(1, 0, 1);
         }
+        // 绘制相机的视锥
         gui->drawFrustum(pose);
         glColor3f(1, 1, 1);
 
+        // =====================
         if(gui->drawFerns->Get())
         {
             glColor3f(0, 0, 0);

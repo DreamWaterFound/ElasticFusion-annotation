@@ -74,7 +74,7 @@ class GUI
             // 窗口参数对象, 本质上就是一个字符串对
             pangolin::Params windowParams;
 
-            // ? 多重采样设置? 
+            // ? 多重采样设置, 疑似和绘制后面的透明物体(主要是时间窗口吧)有关系
             windowParams.Set("SAMPLE_BUFFERS", 0);
             // ?
             windowParams.Set("SAMPLES", 0);
@@ -317,11 +317,17 @@ class GUI
             pangolin::Display("cam").Activate(s_cam);
         }
 
+        /**
+         * @brief 绘制相机的视锥
+         * @param[in] pose 相机当前的位姿
+         */
         inline void drawFrustum(const Eigen::Matrix4f & pose)
         {
+            // showcase 模式下不显示
             if(showcaseMode)
                 return;
 
+            // 获取相机内参
             Eigen::Matrix3f K = Eigen::Matrix3f::Identity();
             K(0, 0) = Intrinsics::getInstance().fx();
             K(1, 1) = Intrinsics::getInstance().fy();
@@ -330,13 +336,14 @@ class GUI
 
             Eigen::Matrix3f Kinv = K.inverse();
 
-            // HACK 修改这里, 用于应对Pangolin版本中出现的问题
+            // HACK 这里做了一定的修改， 避免找不到函数的问题
             #ifdef USE_OPENNI_PANGOLIN
-            pangolin::glDrawFrustrum(Kinv,
-                                     Resolution::getInstance().width(),
-                                     Resolution::getInstance().height(),
-                                     pose,
-                                     0.1f);
+            // 原来 Pangolin 提供了绘制相机视锥的函数了啊
+            pangolin::glDrawFrustrum(Kinv,                                      // 相机内参的逆
+                                     Resolution::getInstance().width(),         // 图像宽度
+                                     Resolution::getInstance().height(),        // 图像高度
+                                     pose,                                      // 相机位姿
+                                     0.5f);                                     // 大小                   
 
             #else
             pangolin::glDrawFrustum(Kinv,
@@ -374,6 +381,17 @@ class GUI
             glFinish();
         }
 
+        /**
+         * @brief 使用快速抗锯齿的方式绘制 Global Model
+         * @param[in] mvp               模型显示视图的投影矩阵, mvp = model view projection
+         * @param[in] mv                虚拟观察相机以何种位姿观测, mv = model view
+         * @param[in] model             ElasticFusion 建立的 Global Model
+         * @param[in] threshold         The point fusion confidence threshold
+         * @param[in] time              当前 ElasticFusion 已经处理过的帧数
+         * @param[in] timeDelta         时间窗口的长度
+         * @param[in] invertNormals     是否使用 ICL-NUIM 数据集
+         */
+        // TODO
         void drawFXAA(pangolin::OpenGlMatrix mvp,
                       pangolin::OpenGlMatrix mv,
                       const std::pair<GLuint, GLuint> & model,
@@ -509,8 +527,8 @@ class GUI
                                    * totalFerns,            ///? 随机蕨数据库中的帧总个数
                                    * totalDefs,             ///? 总共进行的 deformation 次数
                                    * totalFernDefs,         ///? ?
-                                   * trackInliers,          ///? 当前 ICP 配准过程中的 Inlier 对数
-                                   * trackRes,              ///? 当前 ICP 配准过程中的残差
+                                   * trackInliers,          ///< 当前 ICP 配准过程中的 Inlier 对数
+                                   * trackRes,              ///< 当前 ICP 配准过程中的残差
                                    * logProgress;           ///? 处理的图像帧数
 
         // Panel 上的变量 - 设置

@@ -261,8 +261,8 @@ class ElasticFusion
     private:
         IndexMap indexMap;
         RGBDOdometry frameToModel;
-        RGBDOdometry modelToModel;
-        GlobalModel globalModel;
+        RGBDOdometry modelToModel;              ///< 实现追踪的类, 用于 model to model 的追踪
+        GlobalModel globalModel;                ///< Surfel Map
         FillIn fillIn;
         Ferns ferns;
         Deformation localDeformation;
@@ -271,7 +271,7 @@ class ElasticFusion
         const std::string saveFilename;
         std::map<std::string, GPUTexture*> textures;
         std::map<std::string, ComputePack*> computePacks;
-        std::map<std::string, FeedbackBuffer*> feedbackBuffers;
+        std::map<std::string, FeedbackBuffer*> feedbackBuffers;     ///? 存储点云的?
 
         void createTextures();
         void createCompute();
@@ -289,7 +289,7 @@ class ElasticFusion
         Eigen::Matrix4f currPose;           ///< 当前帧相机的位姿
 
         int tick;                           ///< 当前处理过的帧数, 也是处理的图像的时间戳
-        const int timeDelta;
+        const int timeDelta;                ///< 时间窗口的大小, 时间窗口内更新过的模型部分将会用于参与配准过程
         const int icpCountThresh;
         const float icpErrThresh;
         const float covThresh;
@@ -313,7 +313,7 @@ class ElasticFusion
         const bool iclnuim;
 
         const bool reloc;
-        bool lost;
+        bool lost;                          ///< 相机当前是否跟丢的标志
         bool lastFrameRecovery;
         int trackingCount;
         const float maxDepthProcessed;
@@ -322,7 +322,7 @@ class ElasticFusion
         float icpWeight;
         bool pyramid;
         bool fastOdom;
-        float confidenceThreshold;
+        float confidenceThreshold;          ///< The point fusion confidence threshold
         float fernThresh;
         bool so3;
         bool frameToFrameRGB;

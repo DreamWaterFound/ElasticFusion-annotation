@@ -32,6 +32,7 @@
 
 #include "Defines.h"
 
+/** @brief 面元地图类 */
 class GlobalModel
 {
     public:
@@ -46,6 +47,19 @@ class GlobalModel
         static const int NODE_TEXTURE_DIMENSION;
         static const int MAX_NODES;
 
+        /**
+         * @brief 绘制 Global Model 
+         * @param[in] mvp                   获取虚拟观察相机以何种位姿观测, view matrix
+         * @param[in] threshold             The point fusion confidence threshold
+         * @param[in] drawUnstable          是否绘制 unstable 的点
+         * @param[in] drawNormals           是否法线贴图
+         * @param[in] drawColors            是否 RGB 纹理贴图
+         * @param[in] drawPoints            是否以点云而不是以 Surfel 的方式绘图
+         * @param[in] drawWindow            是否绘制时间窗口
+         * @param[in] drawTimes             是否按照面元的创建时间进行着色(但是当使用点的显示方式时不会有效)
+         * @param[in] time                  当前 ElasticFusion 已经处理过的帧数
+         * @param[in] timeDelta             时间窗口的长度
+         */
         EFUSION_API void renderPointCloud(pangolin::OpenGlMatrix mvp,
                               const float threshold,
                               const bool drawUnstable,
@@ -91,8 +105,8 @@ class GlobalModel
 
     private:
         //First is the vbo, second is the fid
-        std::pair<GLuint, GLuint> * vbos;
-        int target, renderSource;
+        std::pair<GLuint, GLuint> * vbos;           ///? 好像和获取哪个全局地图有关系
+        int target, renderSource;                   ///? 好像和获取哪个全局地图有关系
 
         const int bufferSize;
 

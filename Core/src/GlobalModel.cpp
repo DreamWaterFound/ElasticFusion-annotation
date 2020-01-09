@@ -247,16 +247,19 @@ void GlobalModel::initialise(const FeedbackBuffer & rawFeedback,
     glFinish();
 }
 
-void GlobalModel::renderPointCloud(pangolin::OpenGlMatrix mvp,
-                                   const float threshold,
-                                   const bool drawUnstable,
-                                   const bool drawNormals,
-                                   const bool drawColors,
-                                   const bool drawPoints,
-                                   const bool drawWindow,
-                                   const bool drawTimes,
-                                   const int time,
-                                   const int timeDelta)
+// 以正常的模式绘制 Surfel Map
+// TODO
+void GlobalModel::renderPointCloud(
+        pangolin::OpenGlMatrix mvp,     // 获取虚拟观察相机以何种位姿观测, view matrix
+        const float threshold,          // The point fusion confidence threshold
+        const bool drawUnstable,        // 是否绘制 unstable 的点
+        const bool drawNormals,         // 是否法线贴图
+        const bool drawColors,          // 是否 RGB 纹理贴图
+        const bool drawPoints,          // 是否以点云而不是以 Surfel 的方式绘图
+        const bool drawWindow,          // 是否绘制时间窗口
+        const bool drawTimes,           // 是否按照面元的创建时间进行着色(但是当使用点的显示方式时不会有效) 
+        const int time,                 // 当前 ElasticFusion 已经处理过的帧数
+        const int timeDelta)            // 时间窗口的长度
 {
     std::shared_ptr<Shader> program = drawPoints ? drawProgram : drawSurfelProgram;
 
@@ -301,8 +304,10 @@ void GlobalModel::renderPointCloud(pangolin::OpenGlMatrix mvp,
     program->Unbind();
 }
 
+// ? 获取面元... 模型?
 const std::pair<GLuint, GLuint> & GlobalModel::model()
 {
+    // ?
     return vbos[target];
 }
 

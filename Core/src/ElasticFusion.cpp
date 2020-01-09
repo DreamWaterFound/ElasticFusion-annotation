@@ -221,6 +221,7 @@ void ElasticFusion::createFeedbackBuffers()
     feedbackBuffers[FeedbackBuffer::FILTERED] = new FeedbackBuffer(loadProgramGeomFromFile("vertex_feedback.vert", "vertex_feedback.geom"));
 }
 
+// ? 调用这个函数计算原始点云和滤波后的点云信息? 
 void ElasticFusion::computeFeedbackBuffers()
 {
     TICK("feedbackBuffers");
@@ -870,6 +871,7 @@ IndexMap & ElasticFusion::getIndexMap()
     return indexMap;
 }
 
+// 获取 Global Model , 其实就是面元地图
 GlobalModel & ElasticFusion::getGlobalModel()
 {
     return globalModel;
@@ -895,11 +897,13 @@ const std::vector<PoseMatch> & ElasticFusion::getPoseMatches()
     return poseMatches;
 }
 
+// 实现追踪的类
 const RGBDOdometry & ElasticFusion::getModelToModel()
 {
     return modelToModel;
 }
 
+// 获取 The point fusion confidence threshold
 const float & ElasticFusion::getConfidenceThreshold()
 {
     return confidenceThreshold;
@@ -950,6 +954,7 @@ void ElasticFusion::setDepthCutoff(const float & val)
     depthCutoff = val;
 }
 
+// Returns whether or not the camera is lost, if relocalisation mode is on
 const bool & ElasticFusion::getLost() //lel
 {
     return lost;
@@ -961,6 +966,7 @@ const int & ElasticFusion::getTick()
     return tick;
 }
 
+// Get the time window length for model matching
 const int & ElasticFusion::getTimeDelta()
 {
     return timeDelta;
@@ -993,6 +999,7 @@ const int & ElasticFusion::getFernDeforms()
     return fernDeforms;
 }
 
+// ? 获取存储计算得到的点云的缓冲区? 
 std::map<std::string, FeedbackBuffer*> & ElasticFusion::getFeedbackBuffers()
 {
     return feedbackBuffers;

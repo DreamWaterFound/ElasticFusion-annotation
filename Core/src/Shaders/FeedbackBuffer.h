@@ -29,6 +29,7 @@
 
 #include "../Defines.h"
 
+/** @brief //? 疑似和绘制点云有关的类型 */
 class FeedbackBuffer
 {
     public:
@@ -42,6 +43,14 @@ class FeedbackBuffer
                      const int & time,
                      const float depthCutoff);
 
+        /**
+         * @brief // ? 渲染点云?
+         * @param[in] mvp               虚拟观察相机所在的位姿
+         * @param[in] pose              当前相机的位姿
+         * @param[in] drawNormals       是否使用法向贴图
+         * @param[in] drawColors        是否使用RGB纹理贴图
+         * @return EFUSION_API render 
+         */
         EFUSION_API void render(pangolin::OpenGlMatrix mvp, const Eigen::Matrix4f & pose, const bool drawNormals, const bool drawColors);
 
         EFUSION_API static const std::string RAW, FILTERED;

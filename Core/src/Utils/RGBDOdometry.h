@@ -62,8 +62,8 @@ class RGBDOdometry
 
         Eigen::MatrixXd getCovariance();
 
-        float lastICPError;
-        float lastICPCount;
+        float lastICPError;             ///< ICP 匹配过程最后的残差
+        float lastICPCount;             ///< ICP 过程中的内点个数
         float lastRGBError;
         float lastRGBCount;
         float lastSO3Error;
