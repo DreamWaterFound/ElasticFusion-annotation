@@ -494,6 +494,13 @@ class GUI
             // ? 解绑到id 0?
             glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+            // 卸载 GLSL 程序
+            colorFrameBuffer->Unbind();
+            // 解除缓冲区的绑定
+            colorProgram->Unbind();
+            // 恢复属性堆栈
+            glPopAttrib();
+
             // step 4 解除和缓冲区的绑定, 卸载 GLSL 程序, 弹出先前的设置, 恢复现场xuanran
             fxaaProgram->Bind();
 
@@ -501,7 +508,7 @@ class GUI
             // ? 绑定输出纹理
             glBindTexture(GL_TEXTURE_2D, colorTexture->texture->tid);
 
-            // 传参 - 分辨率
+            // // 传参 - 分辨率
             Eigen::Vector2f resolution(renderBuffer->width, renderBuffer->height);
             fxaaProgram->setUniform(Uniform("tex", 0));                     // ? 有何意义？
             fxaaProgram->setUniform(Uniform("resolution", resolution));
