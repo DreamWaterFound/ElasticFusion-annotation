@@ -1,3 +1,14 @@
+/**
+ * @file RGBDOdometry.cpp
+ * @author guoqing (1337841346@qq.com)
+ * @brief 使用 RGB-D 数据的视觉里程计
+ * @version 0.1
+ * @date 2020-01-10
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -18,11 +29,12 @@
 
 #include "RGBDOdometry.h"
 
+// 构造函数
 RGBDOdometry::RGBDOdometry(int width,
                            int height,
                            float cx, float cy, float fx, float fy,
-                           float distThresh,
-                           float angleThresh)
+                           float distThresh,        // 最大距离阈值
+                           float angleThresh)       // 最大角度阈值
 : lastICPError(0),
   lastICPCount(width * height),
   lastRGBError(0),
@@ -110,12 +122,15 @@ RGBDOdometry::RGBDOdometry(int width,
     minimumGradientMagnitudes[2] = 1;
 }
 
+// 析构函数, 啥都不干, 成员变量自己析构去
 RGBDOdometry::~RGBDOdometry()
 {
 
 }
 
-void RGBDOdometry::initICP(GPUTexture * filteredDepth, const float depthCutoff)
+// ? 
+void RGBDOdometry::initICP(GPUTexture * filteredDepth,  // 双边滤波之后的当前帧点云
+                           const float depthCutoff)     // 深度截断值
 {
     cudaArray * textPtr;
 
@@ -166,10 +181,12 @@ void RGBDOdometry::initICP(GPUTexture * predictedVertices, GPUTexture * predicte
     cudaDeviceSynchronize();
 }
 
-void RGBDOdometry::initICPModel(GPUTexture * predictedVertices,
-                                GPUTexture * predictedNormals,
-                                const float depthCutoff,
-                                const Eigen::Matrix4f & modelPose)
+// ICP 迭代过程的初始化
+void RGBDOdometry::initICPModel(GPUTexture * predictedVertices,         // 输入的是当前帧的顶点, 输出的是 predicted 的模型的顶点信息
+                                GPUTexture * predictedNormals,          // 输入的是当前帧的顶点, 输出的是 predicted 的模型的顶点信息
+                                                                        // ? 不过目前来看输出的过程是在后面调用其他的函数的时候才会发生的?
+                                const float depthCutoff,                // 深度截断值
+                                const Eigen::Matrix4f & modelPose)      // ?
 {
     cudaArray * textPtr;
 
@@ -264,13 +281,15 @@ void RGBDOdometry::initFirstRGB(GPUTexture * rgb)
     }
 }
 
-void RGBDOdometry::getIncrementalTransformation(Eigen::Vector3f & trans,
-                                                Eigen::Matrix<float, 3, 3, Eigen::RowMajor> & rot,
-                                                const bool & rgbOnly,
-                                                const float & icpWeight,
-                                                const bool & pyramid,
-                                                const bool & fastOdom,
-                                                const bool & so3)
+// ?
+void RGBDOdometry::getIncrementalTransformation(
+        Eigen::Vector3f & trans,                                // 输入的时候是上一次迭代的相机平移, 输出是迭代后的相机平移
+        Eigen::Matrix<float, 3, 3, Eigen::RowMajor> & rot,      // 输入的时候是上一次迭代的相机旋转, 输出是迭代后的相机旋转
+        const bool & rgbOnly,                                   // ?
+        const float & icpWeight,                                // ?
+        const bool & pyramid,                                   // ?
+        const bool & fastOdom,                                  // ?
+        const bool & so3)                                       // ?
 {
     bool icp = !rgbOnly && icpWeight > 0;
     bool rgb = rgbOnly || icpWeight < 100;

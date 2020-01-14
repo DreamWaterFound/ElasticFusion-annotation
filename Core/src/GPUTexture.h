@@ -50,7 +50,7 @@ class GPUTexture
          * @param[in] internalFormat    纹理的数据格式
          * @param[in] format            对纹理格式的处理
          * @param[in] dataType          每个通道的数据类型
-         * @param[in] draw              // ?
+         * @param[in] draw              // ? 是否绘制? 
          * @param[in] cuda              使用CUDA支持
          * @return EFUSION_API 
          */
@@ -65,7 +65,7 @@ class GPUTexture
         /** @brief 析构函数 */
         virtual ~GPUTexture();
 
-        ///? 几个字符串, 标记当前纹理的状态
+        ///? 几个字符串, 标记当前纹理中存储的是什么内容, 用于在 Pangolin 中指示显示到的 Viewer 的 id
         EFUSION_API static const std::string RGB, DEPTH_RAW, DEPTH_FILTERED, DEPTH_METRIC, DEPTH_METRIC_FILTERED, DEPTH_NORM;
 
         
