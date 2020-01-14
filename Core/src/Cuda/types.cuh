@@ -1,3 +1,14 @@
+/**
+ * @file types.cuh
+ * @author guoqing (1337841346@qq.com)
+ * @brief 定义在 CUDA 函数中会用到的类型
+ * @version 0.1
+ * @date 2020-01-14
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -52,8 +63,10 @@
 #ifndef CUDA_TYPES_CUH_
 #define CUDA_TYPES_CUH_
 
+// CUDA 本身提供的向量类型
 #include <vector_types.h>
 
+// Eigen, 仅在当前文件被 NVCC 编译的时候使用
 #if !defined(__CUDACC__)
 #include <Eigen/Core>
 #endif
@@ -98,9 +111,10 @@ struct CameraModel
     }
 };
 
+/** @brief 矩阵A本质上由 27 项组成, 这个结构体存储这些项 */
 struct JtJJtrSE3
 {
-    //27 floats for each product (27)
+    ///< 27 floats for each product (27)
     float aa, ab, ac, ad, ae, af, ag,
               bb, bc, bd, be, bf, bg,
                   cc, cd, ce, cf, cg,
@@ -108,11 +122,17 @@ struct JtJJtrSE3
                           ee, ef, eg,
                               ff, fg;
 
-    //Extra data needed (29)
+    ///< Extra data needed (29)
+    // ? 一个存储 ICP 过程中的残差, 另外一个存储内点个数
     float residual, inliers;
 
+    /**
+     * @brief 求和函数, 在设备端计算
+     * @param[in] a 加数
+     */
     __device__ inline void add(const JtJJtrSE3 & a)
     {
+        // 就是正常的加和, //? 预计这个函数将会在归约求和中使用
         aa += a.aa;
         ab += a.ab;
         ac += a.ac;

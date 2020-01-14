@@ -1,3 +1,14 @@
+/**
+ * @file ElasticFusion.h
+ * @author guoqing (1337841346@qq.com)
+ * @brief libefusion.so 的接口函数
+ * @version 0.1
+ * @date 2020-01-14
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -19,27 +30,62 @@
 #ifndef ELASTICFUSION_H_
 #define ELASTICFUSION_H_
 
+// 里程计模块
 #include "Utils/RGBDOdometry.h"
+// 分辨率信息模块
 #include "Utils/Resolution.h"
+// 相机内参模块
 #include "Utils/Intrinsics.h"
+// 各个模块运行时间的统计模块
 #include "Utils/Stopwatch.h"
+
+// GLSL
 #include "Shaders/Shaders.h"
 #include "Shaders/ComputePack.h"
 #include "Shaders/FeedbackBuffer.h"
 #include "Shaders/FillIn.h"
+
+// Deformation Graph
 #include "Deformation.h"
+// Model
 #include "GlobalModel.h"
+// ?
 #include "IndexMap.h"
+// Random ferns database
 #include "Ferns.h"
+// ?
 #include "PoseMatch.h"
+// 一些用于 DLL 的宏定义
 #include "Defines.h"
 
+// C++ STL
 #include <iomanip>
+// Pangolin
 #include <pangolin/gl/glcuda.h>
 
+/** @brief ElasticFusion 算法核心实现 */
 class ElasticFusion
 {
     public:
+        /**
+         * @brief 构造函数
+         * @param[in] timeDelta             时间窗口长度
+         * @param[in] countThresh           Local loop closure inlier threshold
+         * @param[in] errThresh             Local loop closure residual threshold
+         * @param[in] covThresh             Local loop closure covariance threshold
+         * @param[in] closeLoops            是否使用闭环 // ? 全局还是局部? 
+         * @param[in] iclnuim               是否使用 ICL-NUIM 数据集
+         * @param[in] reloc                 是否使能了重定位
+         * @param[in] photoThresh           Global loop closure photometric threshold
+         * @param[in] confidence            Surfel confidence threshold
+         * @param[in] depthCut              深度切断值
+         * @param[in] icpThresh             Relative ICP/RGB tracking weight
+         * @param[in] fastOdom              是否工作于纯里程计模式
+         * @param[in] fernThresh            Fern encoding threshold
+         * @param[in] so3                   Disables SO(3) pre-alignment in tracking
+         * @param[in] frameToFrameRGB       是否 Do frame-to-frame RGB tracking
+         * @param[in] fileName              记录文件的位置, 对于实时摄像头来说是 basedir/live
+         */
         EFUSION_API ElasticFusion(const int timeDelta = 200,
                       const int countThresh = 35000,
                       const float errThresh = 5e-05,
@@ -57,6 +103,7 @@ class ElasticFusion
                       const bool frameToFrameRGB = false,
                       const std::string fileName = "");
 
+        /** @brief 析构函数 // TODO */
         virtual ~ElasticFusion();
 
         /**
@@ -260,7 +307,7 @@ class ElasticFusion
         //Here be dragons
     private:
         IndexMap indexMap;                      ///< 包含了 Predicted 的图像
-        RGBDOdometry frameToModel;
+        RGBDOdometry frameToModel;              ///? 负责使用 frameToModel 方式的里程计
         RGBDOdometry modelToModel;              ///< 实现追踪的类, 用于 model to model 的追踪
         GlobalModel globalModel;                ///< Surfel Map
         FillIn fillIn;
@@ -268,7 +315,7 @@ class ElasticFusion
         Deformation localDeformation;           ///< Local deformation graph
         Deformation globalDeformation;          ///< Global deformation graph
 
-        const std::string saveFilename;
+        const std::string saveFilename;         ///< 数据源文件, 如果是live表示跑的是摄像头
         std::map<std::string, GPUTexture*> textures;    ///< 原始输入图像的纹理, //? 第一个元素是字符串描述, 第二个元素是GPU纹理对象句柄?
         std::map<std::string, ComputePack*> computePacks;
         std::map<std::string, FeedbackBuffer*> feedbackBuffers;     ///? 存储点云的?
@@ -290,14 +337,14 @@ class ElasticFusion
 
         int tick;                           ///< 当前处理过的帧数, 也是处理的图像的时间戳
         const int timeDelta;                ///< 时间窗口的大小, 时间窗口内更新过的模型部分将会用于参与配准过程
-        const int icpCountThresh;
-        const float icpErrThresh;
-        const float covThresh;
+        const int icpCountThresh;           ///< Local loop closure inlier threshold
+        const float icpErrThresh;           ///< Local loop closure residual threshold
+        const float covThresh;              ///< Local loop closure covariance threshold
 
         int deforms;                        ///< Local Loop 触发的 defomration 的次数
         int fernDeforms;                    ///< Global Loop 触发的 defomration 的次数
-        const int consSample;
-        Resize resize;
+        const int consSample;               ///? 目测和采样有关
+        Resize resize;                      ///< 使用 GLSL 实现的图像缩放对象 // ? 用于什么用途?
 
         std::vector<PoseMatch> poseMatches;             ///< the list of deformation constraints
         std::vector<Deformation::Constraint> relativeCons;
@@ -305,25 +352,28 @@ class ElasticFusion
         std::vector<std::pair<unsigned long long int, Eigen::Matrix4f> > poseGraph;
         std::vector<unsigned long long int> poseLogTimes;
 
-        Img<Eigen::Matrix<unsigned char, 3, 1>> imageBuff;
-        Img<Eigen::Vector4f> consBuff;
-        Img<unsigned short> timesBuff;
+        Img<Eigen::Matrix<
+            unsigned char, 
+            3, 
+            1>> imageBuff;                  ///? 缩小后的图像缓冲区?
+        Img<Eigen::Vector4f> consBuff;      ///? 为什么每一个像素都是四个元素的向量?
+        Img<unsigned short> timesBuff;      ///? 应该每一个像素都是一个时间戳
 
-        const bool closeLoops;
-        const bool iclnuim;
+        const bool closeLoops;              ///< 是否使用闭环
+        const bool iclnuim;                 ///< 是否使用 ICL-NUIM 数据集
 
-        const bool reloc;
+        const bool reloc;                   ///< 是否使能了重定位
         bool lost;                          ///< 相机当前是否跟丢的标志
-        bool lastFrameRecovery;
-        int trackingCount;
-        const float maxDepthProcessed;
+        bool lastFrameRecovery;             ///? 是否从上一帧恢复?
+        int trackingCount;                  ///? 追踪成功计数? 
+        const float maxDepthProcessed;      ///? 最大处理的深度值?
 
         bool rgbOnly;                       ///< 是否只使用 2.5D RGB-only Lucas-Kanade tracking // ? 2.5D
         float icpWeight;                    ///< Weight for ICP in tracking, 也就是几何误差和色彩误差相互的权重
         bool pyramid;                       ///< 设置是否使用图像金字塔进行追踪
-        bool fastOdom;
+        bool fastOdom;                      ///< 是否工作于纯里程计模式
         float confidenceThreshold;          ///< The point fusion confidence threshold = Raw data fusion confidence threshold
-        float fernThresh;
+        float fernThresh;                   ///< Fern encoding threshold
         bool so3;                           ///< Turns on or off SO(3) alignment bootstrapping
         bool frameToFrameRGB;               ///< Turns on or off frame to frame tracking for RGB
         float depthCutoff;                  ///< 原始图像的深度切断值, 超过这个值的深度信息我们认为不准, 不要了

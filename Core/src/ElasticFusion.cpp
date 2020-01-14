@@ -1,3 +1,14 @@
+/**
+ * @file ElasticFusion.cpp
+ * @author guoqing (1337841346@qq.com)
+ * @brief ElasticFusion 核心算法的实现
+ * @version 0.1
+ * @date 2020-01-14
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -18,68 +29,76 @@
  
 #include "ElasticFusion.h"
 
-ElasticFusion::ElasticFusion(const int timeDelta,
-                             const int countThresh,
-                             const float errThresh,
-                             const float covThresh,
-                             const bool closeLoops,
-                             const bool iclnuim,
-                             const bool reloc,
-                             const float photoThresh,
-                             const float confidence,
-                             const float depthCut,
-                             const float icpThresh,
-                             const bool fastOdom,
-                             const float fernThresh,
-                             const bool so3,
-                             const bool frameToFrameRGB,
-                             const std::string fileName)
- : frameToModel(Resolution::getInstance().width(),
-                Resolution::getInstance().height(),
-                Intrinsics::getInstance().cx(),
-                Intrinsics::getInstance().cy(),
-                Intrinsics::getInstance().fx(),
-                Intrinsics::getInstance().fy()),
-   modelToModel(Resolution::getInstance().width(),
-                Resolution::getInstance().height(),
-                Intrinsics::getInstance().cx(),
-                Intrinsics::getInstance().cy(),
-                Intrinsics::getInstance().fx(),
-                Intrinsics::getInstance().fy()),
-   ferns(500, depthCut * 1000, photoThresh),
-   saveFilename(fileName),
-   currPose(Eigen::Matrix4f::Identity()),
-   tick(1),
-   timeDelta(timeDelta),
-   icpCountThresh(countThresh),
-   icpErrThresh(errThresh),
-   covThresh(covThresh),
-   deforms(0),
-   fernDeforms(0),
-   consSample(20),
-   resize(Resolution::getInstance().width(),
-          Resolution::getInstance().height(),
-          Resolution::getInstance().width() / consSample,
-          Resolution::getInstance().height() / consSample),
-   imageBuff(Resolution::getInstance().rows() / consSample, Resolution::getInstance().cols() / consSample),
-   consBuff(Resolution::getInstance().rows() / consSample, Resolution::getInstance().cols() / consSample),
-   timesBuff(Resolution::getInstance().rows() / consSample, Resolution::getInstance().cols() / consSample),
-   closeLoops(closeLoops),
-   iclnuim(iclnuim),
-   reloc(reloc),
-   lost(false),
-   lastFrameRecovery(false),
-   trackingCount(0),
-   maxDepthProcessed(20.0f),
-   rgbOnly(false),
-   icpWeight(icpThresh),
-   pyramid(true),
-   fastOdom(fastOdom),
-   confidenceThreshold(confidence),
-   fernThresh(fernThresh),
-   so3(so3),
-   frameToFrameRGB(frameToFrameRGB),
-   depthCutoff(depthCut)
+// 构造函数
+ElasticFusion::ElasticFusion(const int timeDelta,           // 时间窗口长度
+                             const int countThresh,         // Local loop closure inlier threshold
+                             const float errThresh,         // Local loop closure residual threshold
+                             const float covThresh,         // Local loop closure covariance threshold
+                             const bool closeLoops,         // 是否使用闭环 // ? 全局还是局部?
+                             const bool iclnuim,            // 是否使用 ICL-NUIM 数据集
+                             const bool reloc,              // 是否使能了重定位
+                             const float photoThresh,       // Global loop closure photometric threshold
+                             const float confidence,        // Surfel confidence threshold
+                             const float depthCut,          // 深度切断值(m)
+                             const float icpThresh,         // Relative ICP/RGB tracking weight
+                             const bool fastOdom,           // 是否工作于纯里程计模式
+                             const float fernThresh,        // Fern encoding threshold
+                             const bool so3,                // Disables SO(3) pre-alignment in tracking
+                             const bool frameToFrameRGB,    // 是否 Do frame-to-frame RGB tracking
+                             const std::string fileName)    // 记录文件的位置, 对于实时摄像头来说是 basedir/live
+ :  // TODO 
+    frameToModel(Resolution::getInstance().width(),         // 生成 frameToModel对齐的 对象, 给定图像的大小和相机内参 
+                 Resolution::getInstance().height(),
+                 Intrinsics::getInstance().cx(),
+                 Intrinsics::getInstance().cy(),
+                 Intrinsics::getInstance().fx(),
+                 Intrinsics::getInstance().fy()),
+    // TODO
+    modelToModel(Resolution::getInstance().width(),         // 生成 modelToModel 对象, 给定图像的大小和相机内参 
+                 Resolution::getInstance().height(),
+                 Intrinsics::getInstance().cx(),
+                 Intrinsics::getInstance().cy(),
+                 Intrinsics::getInstance().fx(),
+                 Intrinsics::getInstance().fy()),
+    ferns(500,                                              // 生成随机蕨数据库对象 // ? 这个参数是?
+          depthCut * 1000,                                  // 深度切断值转从 m 转换成为 mm
+          photoThresh),                                     // Global loop closure photometric threshold
+    saveFilename(fileName),                                 // 数据源文件
+    currPose(Eigen::Matrix4f::Identity()),                  // 当前帧相机的位姿初始化为单位阵
+    tick(1),                                                // 已经处理过的图像计数 // 为什么是 1 而不是 0?
+    timeDelta(timeDelta),                                   // 时间窗口长度
+    icpCountThresh(countThresh),                            // Local loop closure inlier threshold
+    icpErrThresh(errThresh),                                // Local loop closure residual threshold
+    covThresh(covThresh),                                   // Local loop closure covariance threshold
+    deforms(0),                                             // Local Loop 触发的 defomration 的次数
+    fernDeforms(0),                                         // Global Loop 触发的 defomration 的次数
+    consSample(20),                                         // ? 疑似随机蕨中用于降采样的倍数, 下面的 resize 的构造能够体现出这一点
+    resize(Resolution::getInstance().width(),               // 构造使用GPU纹理操作实现的 resize 对象
+           Resolution::getInstance().height(),
+           Resolution::getInstance().width() / consSample,
+           Resolution::getInstance().height() / consSample),
+    // ? 缩小后的图像缓冲区? 
+    imageBuff(Resolution::getInstance().rows() / consSample, Resolution::getInstance().cols() / consSample),
+    // ?
+    consBuff(Resolution::getInstance().rows() / consSample, Resolution::getInstance().cols() / consSample),
+    // ?
+    timesBuff(Resolution::getInstance().rows() / consSample, Resolution::getInstance().cols() / consSample),\
+    closeLoops(closeLoops),                                 // 是否使用闭环
+    iclnuim(iclnuim),                                       // 是否使用 ICL-NUIM 数据集
+    reloc(reloc),                                           // 是否使能了重定位
+    lost(false),                                            // 相机当前是否处于跟丢了的状态, 第一帧的时候先认为没有很丢
+    lastFrameRecovery(false),                               // ?
+    trackingCount(0),                                       // ? 追踪成功计数?
+    maxDepthProcessed(20.0f),                               // ? 最大处理的深度值? 
+    rgbOnly(false),                                         // 是否只使用 2.5D RGB-only Lucas-Kanade tracking
+    icpWeight(icpThresh),                                   // Weight for ICP in tracking, 也就是几何误差和色彩误差相互的权重
+    pyramid(true),                                          // 设置是否使用图像金字塔进行追踪
+    fastOdom(fastOdom),                                     // 是否工作于纯里程计模式
+    confidenceThreshold(confidence),                        // Surfel confidence threshold
+    fernThresh(fernThresh),                                 // Fern encoding threshold
+    so3(so3),                                               // Turns on or off SO(3) alignment bootstrapping
+    frameToFrameRGB(frameToFrameRGB),                       // 是否 Do frame-to-frame RGB tracking
+    depthCutoff(depthCut)                                   // 深度切断值(m)
 {
     createTextures();
     createCompute();

@@ -33,25 +33,25 @@
 RGBDOdometry::RGBDOdometry(int width,
                            int height,
                            float cx, float cy, float fx, float fy,
-                           float distThresh,        // 最大距离阈值
-                           float angleThresh)       // 最大角度阈值
-: lastICPError(0),
-  lastICPCount(width * height),
-  lastRGBError(0),
-  lastRGBCount(width * height),
-  lastSO3Error(0),
-  lastSO3Count(width * height),
-  lastA(Eigen::Matrix<double, 6, 6, Eigen::RowMajor>::Zero()),
-  lastb(Eigen::Matrix<double, 6, 1>::Zero()),
-  sobelSize(3),
-  sobelScale(1.0 / pow(2.0, sobelSize)),
-  maxDepthDeltaRGB(0.07),
-  maxDepthRGB(6.0),
-  distThres_(distThresh),
-  angleThres_(angleThresh),
-  width(width),
-  height(height),
-  cx(cx), cy(cy), fx(fx), fy(fy)
+                           float distThresh,        // 成为匹配点的最大距离阈值
+                           float angleThresh)       // 成为匹配点的最大角度阈值的正弦值
+: lastICPError(0),                                  // 上次配准的几何误差
+  lastICPCount(width * height),                     // 上次配准的内点个数
+  lastRGBError(0),                                  // 上次配准的彩色误差
+  lastRGBCount(width * height),                     // 上次配准彩色误差对应的内点个数
+  lastSO3Error(0),                                  // ?
+  lastSO3Count(width * height),                     // ?
+  lastA(Eigen::Matrix<double, 6, 6, Eigen::RowMajor>::Zero()),      // PL-ICP 并行化后得到的超定方程的最小二乘解方程对应的系数矩阵
+  lastb(Eigen::Matrix<double, 6, 1>::Zero()),                       // 对应的非齐次项
+  sobelSize(3),                                     // ?
+  sobelScale(1.0 / pow(2.0, sobelSize)),            // 1/(sobelSize^2) // ?
+  maxDepthDeltaRGB(0.07),                           // ?
+  maxDepthRGB(6.0),                                 // ?
+  distThres_(distThresh),                           // 成为匹配点的最大距离阈值
+  angleThres_(angleThresh),                         // 成为匹配点的最大角度阈值的正弦值
+  width(width),                                     // 输入图像宽度
+  height(height),                                   // 输入图像高度
+  cx(cx), cy(cy), fx(fx), fy(fy)                    // 相机内参
 {
     sumDataSE3.create(MAX_THREADS);
     outDataSE3.create(1);

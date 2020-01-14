@@ -1,3 +1,14 @@
+/**
+ * @file convenience.cuh
+ * @author guoqing (1337841346@qq.com)
+ * @brief 为了方便定义了一些静态内联函数, 供 .cu 文件使用
+ * @version 0.1
+ * @date 2020-01-14
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -52,17 +63,30 @@
 #ifndef CUDA_CONVENIENCE_CUH_
 #define CUDA_CONVENIENCE_CUH_
 
+// CUDA
 #include <cuda_runtime_api.h>
+// C++
 #include <cstdlib>
 #include <iostream>
 
+/**
+ * @brief 感觉和设置计算网格大小(线程块的个数)有关 //?
+ * @param[in] x //? 
+ * @param[in] y //?
+ * @return int  //?
+ */
 static inline int getGridDim(int x, int y)
 {
     return (x + y - 1) / y;
 }
 
+/**
+ * @brief 获取 CUDA 函数的运行状态. 如果 CUDA 程序运行出错, 则强行终止程序, 并且输出错误信息
+ * @param[in] err CUDA 函数运行错误码
+ */
 static inline void cudaSafeCall(cudaError_t err)
 {
+    // ! 这个函数的功能使用宏定义来实现会更好
     if(cudaSuccess != err)
     {
         std::cout << "Error: " << cudaGetErrorString(err) << ": " << __FILE__ << ":" << __LINE__ << std::endl;

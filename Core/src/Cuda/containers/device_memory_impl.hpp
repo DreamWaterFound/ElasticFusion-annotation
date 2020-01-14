@@ -1,3 +1,14 @@
+/**
+ * @file device_memory.hpp
+ * @author guoqing (1337841346@qq.com)
+ * @brief 实现了 DeviceMemory DeviceMemory2D 类的内联函数
+ * @version 0.1
+ * @date 2020-01-14
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * Software License Agreement (BSD License)
  *
@@ -39,22 +50,29 @@
 
 /////////////////////  Inline implementations of DeviceMemory ////////////////////////////////////////////
 
+// 获取原始指针(可读写)
 template<class T> inline       T* DeviceMemory::ptr()       { return (      T*)data_; }
+// 获取原始指针(只读)
 template<class T> inline const T* DeviceMemory::ptr() const { return (const T*)data_; }
-                        
+
+// 重载类型转换函数, 将 DeviceMemory 转换成为 PtrSz 数据, 用于核函数的指针传递
 template <class U> inline DeviceMemory::operator PtrSz<U>() const
 {
     PtrSz<U> result;
     result.data = (U*)ptr<U>();
+    // 有几个 U 类型的变量
     result.size = sizeBytes_/sizeof(U);
     return result; 
 }
 
 /////////////////////  Inline implementations of DeviceMemory2D ////////////////////////////////////////////
                
+// 获取指定行的原始指针(可读写)
 template<class T>        T* DeviceMemory2D::ptr(int y_arg)       { return (      T*)((      char*)data_ + y_arg * step_); }
+// 获取指定行的原始指针(只读)
 template<class T>  const T* DeviceMemory2D::ptr(int y_arg) const { return (const T*)((const char*)data_ + y_arg * step_); }
-  
+
+// 将原始指针转换成为 PtrStep, 用于核函数参数传递
 template <class U> DeviceMemory2D::operator PtrStep<U>() const
 {
     PtrStep<U> result;
@@ -63,11 +81,13 @@ template <class U> DeviceMemory2D::operator PtrStep<U>() const
     return result;
 }
 
+// 将原始指针转换成为 PtrStepSz, 用于核函数参数传递
 template <class U> DeviceMemory2D::operator PtrStepSz<U>() const
 {
     PtrStepSz<U> result;
     result.data = (U*)ptr<U>();
     result.step = step_;
+    // 转换成为列数
     result.cols = colsBytes_/sizeof(U);
     result.rows = rows_;
     return result;

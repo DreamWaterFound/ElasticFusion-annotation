@@ -40,7 +40,6 @@
 // 用于辅助计算旋转的小工具
 #include "OdometryProvider.h"
 // 保存了常用的显卡的最佳的 CUDA 核心资源分配模式
-// TODO
 #include "GPUConfig.h"
 
 // C++ STL
@@ -122,13 +121,13 @@ class RGBDOdometry
 
         float lastICPError;             ///< ICP 匹配过程最后的残差
         float lastICPCount;             ///< ICP 过程中的内点个数
-        float lastRGBError;
-        float lastRGBCount;
-        float lastSO3Error;
-        float lastSO3Count;
+        float lastRGBError;             ///< 颜色误差
+        float lastRGBCount;             ///? 颜色的内点个数?
+        float lastSO3Error;             ///?
+        float lastSO3Count;             ///? 内点个数?
 
-        Eigen::Matrix<double, 6, 6, Eigen::RowMajor> lastA;
-        Eigen::Matrix<double, 6, 1> lastb;
+        Eigen::Matrix<double, 6, 6, Eigen::RowMajor> lastA;         ///< PL-ICP 并行化后得到的超定方程的最小二乘解方程对应的系数矩阵
+        Eigen::Matrix<double, 6, 1> lastb;                          ///< PL-ICP 并行化后得到的超定方程的最小二乘解方程对应的非齐次项
 
     private:
         void populateRGBDData(GPUTexture * rgb,
@@ -148,17 +147,17 @@ class RGBDOdometry
 
         CameraModel intr;
 
-        DeviceArray<JtJJtrSE3> sumDataSE3;
+        DeviceArray<JtJJtrSE3> sumDataSE3;      ///? 
         DeviceArray<JtJJtrSE3> outDataSE3;
         DeviceArray<int2> sumResidualRGB;
 
         DeviceArray<JtJJtrSO3> sumDataSO3;
         DeviceArray<JtJJtrSO3> outDataSO3;
 
-        const int sobelSize;
-        const float sobelScale;
-        const float maxDepthDeltaRGB;
-        const float maxDepthRGB;
+        const int sobelSize;                ///?
+        const float sobelScale;             ///? 1/(sobelSize^2)
+        const float maxDepthDeltaRGB;       ///?
+        const float maxDepthRGB;            ///?
 
         std::vector<int2> pyrDims;
 
@@ -181,14 +180,14 @@ class RGBDOdometry
         std::vector<int> iterations;
         std::vector<float> minimumGradientMagnitudes;
 
-        float distThres_;
-        float angleThres_;
+        float distThres_;                       ///< 成为匹配点的最大距离阈值
+        float angleThres_;                      ///< 成为匹配点的最大角度阈值的正弦值
 
         Eigen::Matrix<double, 6, 6> lastCov;
 
-        const int width;
-        const int height;
-        const float cx, cy, fx, fy;
+        const int width;                        ///< 输入图像宽度
+        const int height;                       ///< 输入图像高度
+        const float cx, cy, fx, fy;             ///< 相机内参
 };
 
 #endif /* RGBDODOMETRY_H_ */
