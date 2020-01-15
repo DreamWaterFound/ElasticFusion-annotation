@@ -317,11 +317,14 @@ class ElasticFusion
 
         const std::string saveFilename;         ///< 数据源文件, 如果是live表示跑的是摄像头
         std::map<std::string, GPUTexture*> textures;    ///< 原始输入图像的纹理, //? 第一个元素是字符串描述, 第二个元素是GPU纹理对象句柄?
-        std::map<std::string, ComputePack*> computePacks;
-        std::map<std::string, FeedbackBuffer*> feedbackBuffers;     ///? 存储点云的?
+        std::map<std::string, ComputePack*> computePacks;           ///< 着色管线对象
+        std::map<std::string, FeedbackBuffer*> feedbackBuffers;     ///? 存储点云的? 有点像根据深度图计算得到点云数据
 
+        /** @brief 创建纹理, 分配纹理空间 */
         void createTextures();
+        /** @brief 着色管线装配 */
         void createCompute();
+        /** @brief 创建深度图生成点云器 // ? */
         void createFeedbackBuffers();
 
         void filterDepth();

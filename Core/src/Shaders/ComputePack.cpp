@@ -1,3 +1,14 @@
+/**
+ * @file ComputePack.cpp
+ * @author guoqing (1337841346@qq.com)
+ * @brief 装配好的着色管线对象
+ * @version 0.1
+ * @date 2020-01-15
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -16,27 +27,27 @@
  *
  */
 
+
 #include "ComputePack.h"
 
-const std::string ComputePack::NORM = "NORM";
-const std::string ComputePack::FILTER = "FILTER";
-const std::string ComputePack::METRIC = "METRIC";
-const std::string ComputePack::METRIC_FILTERED = "METRIC_FILTERED";
+const std::string ComputePack::NORM             = "NORM";               // 原始
+const std::string ComputePack::FILTER           = "FILTER";             // 双边滤波后
+const std::string ComputePack::METRIC           = "METRIC";             // 度量化的深度图, 每个像素表示实际距离
+const std::string ComputePack::METRIC_FILTERED  = "METRIC_FILTERED";    // 双边滤波后度量化的深度图
 
-ComputePack::ComputePack(std::shared_ptr<Shader> program,
-                         pangolin::GlTexture * target)
- : program(program),
-   renderBuffer(Resolution::getInstance().width(), Resolution::getInstance().height()),
-   target(target)
+// 构造函数
+ComputePack::ComputePack(std::shared_ptr<Shader> program,               // GLSL 程序对象
+                         pangolin::GlTexture * target)                  // GPU纹理
+ : program(program),                                                    // GLSL 程序对象句柄
+   renderBuffer(Resolution::getInstance().width(), Resolution::getInstance().height()), // 生成渲染缓存
+   target(target)                                                       // 纹理对象
 {
-    frameBuffer.AttachColour(*target);
-    frameBuffer.AttachDepth(renderBuffer);
+    frameBuffer.AttachColour(*target);      // 彩色信息绑定输出到纹理对象中
+    frameBuffer.AttachDepth(renderBuffer);  // 深度信息绑定输出到渲染缓存中
 }
 
-ComputePack::~ComputePack()
-{
-
-}
+// 析构函数
+ComputePack::~ComputePack(){}
 
 void ComputePack::compute(pangolin::GlTexture * input, const std::vector<Uniform> * const uniforms)
 {

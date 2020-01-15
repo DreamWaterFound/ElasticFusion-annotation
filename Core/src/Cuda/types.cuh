@@ -85,6 +85,7 @@ struct mat33
     float3 data[3];
 };
 
+/** @brief // ? 不知道用途, 只知道是类似于图像结构中的像素格式的角色 */
 struct DataTerm
 {
     short2 zero;
@@ -93,17 +94,33 @@ struct DataTerm
     bool valid;
 };
 
+/** @brief 针孔相机模型 */
 struct CameraModel
 {
+    /// 相机内参
     float fx, fy, cx, cy;
+
+    /** @brief 默认构造函数, 相机内参数值均为0 */
     CameraModel()
      : fx(0), fy(0), cx(0), cy(0)
     {}
 
+    /**
+     * @brief 给定相机内参的构造函数
+     * @param[in] fx_ 
+     * @param[in] fy_ 
+     * @param[in] cx_ 
+     * @param[in] cy_ 
+     */
     CameraModel(float fx_, float fy_, float cx_, float cy_)
      : fx(fx_), fy(fy_), cx(cx_), cy(cy_)
     {}
 
+    /**
+     * @brief 获取以 1/2 倍率进行降采样的图像金字塔中, 图像所对应的相机内参
+     * @param[in] level 图像所在的图像金字塔图层数
+     * @return CameraModel 对应的相机内参
+     */
     CameraModel operator()(int level) const
     {
         int div = 1 << level;

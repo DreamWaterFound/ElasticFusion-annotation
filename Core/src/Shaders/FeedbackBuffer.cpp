@@ -23,24 +23,30 @@ const std::string FeedbackBuffer::RAW = "RAW";
 const std::string FeedbackBuffer::FILTERED = "FILTERED";
 
 FeedbackBuffer::FeedbackBuffer(std::shared_ptr<Shader> program)
- : program(program),
-   drawProgram(loadProgramFromFile("draw_feedback.vert", "draw_feedback.frag")),
-   bufferSize(Resolution::getInstance().numPixels() * Vertex::SIZE),
-   count(0)
+ : program(program),                                                                // 从深度图计算点云的着色器
+   drawProgram(loadProgramFromFile("draw_feedback.vert", "draw_feedback.frag")),    // 绘制点云的着色器
+   bufferSize(Resolution::getInstance().numPixels() * Vertex::SIZE),                // ? 顶点的个数? 占用字节个数?
+   count(0)                                                                         // ? 
 {
     float * vertices = new float[bufferSize];
 
     memset(&vertices[0], 0, bufferSize);
 
+    // FUTURE_TODO 从渲染管线中劫持即将进行图元装配的顶点数据, 并且填充到自定义的缓冲区中
+    // ? 为什么要在构造函数中执行这个操作呢?
     glGenTransformFeedbacks(1, &fid);
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, bufferSize, &vertices[0], GL_STREAM_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+    // ? 又为什么删除了呢? 好像是故意为了避免第一次出现错误的结果?
     delete [] vertices;
 
+    // 表示图像坐标
     std::vector<Eigen::Vector2f> uv;
+
+    // HERE
 
     for(int i = 0; i < Resolution::getInstance().width(); i++)
     {
@@ -72,6 +78,7 @@ FeedbackBuffer::FeedbackBuffer(std::shared_ptr<Shader> program)
     glGenQueries(1, &countQuery);
 }
 
+// 析构函数 // TODO
 FeedbackBuffer::~FeedbackBuffer()
 {
     glDeleteTransformFeedbacks(1, &fid);

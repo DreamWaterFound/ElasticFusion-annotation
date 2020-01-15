@@ -30,22 +30,37 @@
 #ifndef FERNS_H_
 #define FERNS_H_
 
+// C++
 #include <random>
-#include <Eigen/Core>
-#include <Eigen/LU>
 #include <vector>
 #include <limits>
 
+// Eigen
+#include <Eigen/Core>
+#include <Eigen/LU>
+
+// 分辨率对象
 #include "Utils/Resolution.h"
+// 相机内参对象
 #include "Utils/Intrinsics.h"
+// 视觉里程计对象
 #include "Utils/RGBDOdometry.h"
+// 利用 GLSL 实现的图像大小缩放对象
 #include "Shaders/Resize.h"
 
 /** @brief 随机蕨数据库 */
 class Ferns
 {
     public:
+        /**
+         * @brief 构造函数
+         * @param[in] n                 蕨的棵数
+         * @param[in] maxDepth          深度切断值
+         * @param[in] photoThresh       Global loop closure photometric threshold
+         */
         Ferns(int n, int maxDepth, const float photoThresh);
+
+
         virtual ~Ferns();
 
         bool addFrame(GPUTexture * imageTexture, GPUTexture * vertexTexture, GPUTexture * normalTexture, const Eigen::Matrix4f & pose, int srcTime, const float threshold);
@@ -72,18 +87,19 @@ class Ferns
                                   const int time,
                                   const bool lost);
 
+        /** @brief 表示每一个"蕨", 嵌套类  // ? 对应着一对采样点? */
         class Fern
         {
             public:
-                Fern()
-                {}
+                /** @brief 空构造函数 */
+                Fern(){}
 
-                Eigen::Vector2i pos;
-                Eigen::Vector4i rgbd;
-                std::vector<int> ids[16];
+                Eigen::Vector2i pos;            ///< 点的位置
+                Eigen::Vector4i rgbd;           ///?
+                std::vector<int> ids[16];       ///?
         };
 
-        std::vector<Fern> conservatory;
+        std::vector<Fern> conservatory;         ///< 保存所有蕨的"温室", 其实就是所有蕨的组合(森林)
 
         /** @brief 帧类别, 用于随机蕨数据库 */
         class Frame
@@ -152,21 +168,21 @@ class Ferns
 
         std::vector<Frame*> frames;                         ///< 随机蕨数据库中的图像帧对象
 
-        const int num;
-        std::mt19937 random;
-        const int factor;
-        const int width;
-        const int height;
-        const int maxDepth;
-        const float photoThresh;
-        std::uniform_int_distribution<int32_t> widthDist;
-        std::uniform_int_distribution<int32_t> heightDist;
-        std::uniform_int_distribution<int32_t> rgbDist;
-        std::uniform_int_distribution<int32_t> dDist;
+        const int num;                                      ///< 蕨的棵数
+        std::mt19937 random;                                ///< 高性能的随机数发生器, C++ STL 提供
+        const int factor;                                   ///< 随机蕨采样的图像相对于原图像的缩放系数, 这里直接进行了 1/8 下采样 
+        const int width;                                    ///< 采样图像的宽度
+        const int height;                                   ///< 采样图像的高度
+        const int maxDepth;                                 ///< 深度切断值
+        const float photoThresh;                            ///< Global loop closure photometric threshold
+        std::uniform_int_distribution<int32_t> widthDist;   ///< 用于随机蕨在宽度维度上进行随机采样的一维均匀分布对象
+        std::uniform_int_distribution<int32_t> heightDist;  ///< 用于随机蕨在高度维度上进行随机采样的一维均匀分布对象
+        std::uniform_int_distribution<int32_t> rgbDist;     ///< RGB强度值(0-255)的均匀分布对象 // ? 拿来做什么用?
+        std::uniform_int_distribution<int32_t> dDist;       ///< 深度值最低从 400 开始, 到切断距离的均匀分布对象
 
         int lastClosest;                                    ///? 最近的和当前帧匹配的帧在 frames 中的id?
-        const unsigned char badCode;
-        RGBDOdometry rgbd;
+        const unsigned char badCode;                        ///< Bad code // ? 表示什么的 bad  code?
+        RGBDOdometry rgbd;                                  ///? 做什么用的里程计对象? 感觉好像是在根据外观决定 Global Loop 后, 进一步决定几何机构是否匹配的时候使用的
 
     private:
         void generateFerns();
@@ -180,20 +196,23 @@ class Ferns
                                const Eigen::Matrix4f & fernPose,
                                const unsigned char * fernRgb);
 
-        GPUTexture vertFern;
-        GPUTexture vertCurrent;
+        // 顶点
+        GPUTexture vertFern;            ///? 
+        GPUTexture vertCurrent;         ///? 当前图像的顶点纹理
 
-        GPUTexture normFern;
-        GPUTexture normCurrent;
+        // 法向
+        GPUTexture normFern;            ///?
+        GPUTexture normCurrent;         ///? 当前图像的法向纹理
 
-        GPUTexture colorFern;
-        GPUTexture colorCurrent;
+        // 颜色
+        GPUTexture colorFern;           ///?
+        GPUTexture colorCurrent;        ///? 当前图像的彩色纹理
 
-        Resize resize;
+        Resize resize;                  ///< 使用GLSL实现的resize对象
 
-        Img<Eigen::Matrix<unsigned char, 3, 1>> imageBuff;
-        Img<Eigen::Vector4f> vertBuff;
-        Img<Eigen::Vector4f> normBuff;
+        Img<Eigen::Matrix<unsigned char, 3, 1>> imageBuff;      ///< 彩色图像缓冲
+        Img<Eigen::Vector4f> vertBuff;                          ///< 顶点缓冲
+        Img<Eigen::Vector4f> normBuff;                          ///< 法向缓冲
 };
 
 #endif /* FERNS_H_ */

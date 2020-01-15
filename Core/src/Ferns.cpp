@@ -1,3 +1,14 @@
+/**
+ * @file Ferns.cpp
+ * @author guoqing (1337841346@qq.com)
+ * @brief 随机蕨数据库
+ * @version 0.1
+ * @date 2020-01-15
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -18,36 +29,45 @@
 
 #include "Ferns.h"
 
-Ferns::Ferns(int n, int maxDepth, const float photoThresh)
- : num(n),
-   factor(8),
-   width(Resolution::getInstance().width() / factor),
-   height(Resolution::getInstance().height() / factor),
-   maxDepth(maxDepth),
-   photoThresh(photoThresh),
-   widthDist(0, width - 1),
-   heightDist(0, height - 1),
-   rgbDist(0, 255),
-   dDist(400, maxDepth),
-   lastClosest(-1),
-   badCode(255),
+// 构造函数, 创建随机蕨数据库对象
+Ferns::Ferns(int n,                     // 蕨的棵数
+             int maxDepth,              // 深度切断值
+             const float photoThresh)   // Global loop closure photometric threshold
+ : num(n),                              // 蕨的棵数
+   factor(8),                           // 随机蕨采样的图像相对于原图像的缩放系数, 这里直接进行了 1/8 下采样
+   width(Resolution::getInstance().width() / factor),       // 采样图像的宽度
+   height(Resolution::getInstance().height() / factor),     // 采样图像的高度
+   maxDepth(maxDepth),                  // 深度切断值
+   photoThresh(photoThresh),            // Global loop closure photometric threshold
+   widthDist(0, width - 1),             // 用于随机蕨在宽度维度上进行随机采样的一维均匀分布对象
+   heightDist(0, height - 1),           // 用于随机蕨在高度维度上进行随机采样的一维均匀分布对象
+   rgbDist(0, 255),                     // 强度值 0-255 的RGB强度均匀分布对象 // ? 有什么用?
+   dDist(400, maxDepth),                // 深度值最低从 400 开始, 到切断距离的均匀分布对象 // ? 同样有什么用?
+   lastClosest(-1),                     // ? 最近的和当前帧匹配的帧在 frames 中的id?
+   badCode(255),                        // ? 表示什么的 Bad code?
+   // ? 疑似是在确定几何结构是否配准阶段使用到的视觉里程计对象
    rgbd(Resolution::getInstance().width() / factor,
         Resolution::getInstance().height() / factor,
         Intrinsics::getInstance().cx() / factor,
         Intrinsics::getInstance().cy() / factor,
         Intrinsics::getInstance().fx() / factor,
         Intrinsics::getInstance().fy() / factor),
-   vertFern(width, height, GL_RGBA32F, GL_LUMINANCE, GL_FLOAT, false, true),
-   vertCurrent(width, height, GL_RGBA32F, GL_LUMINANCE, GL_FLOAT, false, true),
+   // 顶点纹理
+   vertFern(width, height, GL_RGBA32F, GL_LUMINANCE, GL_FLOAT, false, true),            // ?
+   vertCurrent(width, height, GL_RGBA32F, GL_LUMINANCE, GL_FLOAT, false, true),         // ? 当前帧图像的, 下同
+   // 法向纹理
    normFern(width, height, GL_RGBA32F, GL_LUMINANCE, GL_FLOAT, false, true),
    normCurrent(width, height, GL_RGBA32F, GL_LUMINANCE, GL_FLOAT, false, true),
+   // 颜色纹理
    colorFern(width, height, GL_RGBA, GL_RGB, GL_UNSIGNED_BYTE, false, true),
    colorCurrent(width, height, GL_RGBA, GL_RGB, GL_UNSIGNED_BYTE, false, true),
+   // 使用GLSL实现的resize对象
    resize(Resolution::getInstance().width(), Resolution::getInstance().height(), width, height),
-   imageBuff(width, height),
-   vertBuff(width, height),
-   normBuff(width, height)
+   imageBuff(width, height),                // 图像缓冲
+   vertBuff(width, height),                 // 顶点缓冲
+   normBuff(width, height)                  // 法向缓冲
 {
+    // 设置随机数发生器的种子, 生成随机蕨中的每一棵蕨
     random.seed(time(0));
     generateFerns();
 }
@@ -62,18 +82,20 @@ Ferns::~Ferns()
 
 void Ferns::generateFerns()
 {
+    // 生成每一棵随机蕨
     for(int i = 0; i < num; i++)
     {
+        // 生成一棵蕨 // ? 这每一棵蕨不应该是一对点吗
         Fern f;
-
-        f.pos(0) = widthDist(random);
-        f.pos(1) = heightDist(random);
-
+        // 随机确定降采样图像中一个点的位置
+        f.pos(0)  = widthDist(random);
+        f.pos(1)  = heightDist(random);
+        // ? 颜色和深度?
         f.rgbd(0) = rgbDist(random);
         f.rgbd(1) = rgbDist(random);
         f.rgbd(2) = rgbDist(random);
         f.rgbd(3) = dDist(random);
-
+        // 保存
         conservatory.push_back(f);
     }
 }

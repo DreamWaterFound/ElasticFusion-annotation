@@ -53,52 +53,65 @@ RGBDOdometry::RGBDOdometry(int width,
   height(height),                                   // 输入图像高度
   cx(cx), cy(cy), fx(fx), fy(fy)                    // 相机内参
 {
+    // 保存误差项累加和的显存变量 // 为什么要有 MAX_THREADS 个?
     sumDataSE3.create(MAX_THREADS);
+    // 所有的误差项累加, 所以最后是元素个数是1 // ? 是 sumDataSE3 的按项累加吗?
     outDataSE3.create(1);
     sumResidualRGB.create(MAX_THREADS);
 
+    // ? 只考虑旋转的时候的误差?
     sumDataSO3.create(MAX_THREADS);
     outDataSO3.create(1);
 
+    // 计算图像金字塔中的每一层图像的大小
     for(int i = 0; i < NUM_PYRS; i++)
     {
         int2 nextDim = {height >> i, width >> i};
         pyrDims.push_back(nextDim);
     }
 
+    // 创建图像金字塔中每一层的图像
     for(int i = 0; i < NUM_PYRS; i++)
     {
+        // ?
         lastDepth[i].create(pyrDims.at(i).x, pyrDims.at(i).y);
         lastImage[i].create(pyrDims.at(i).x, pyrDims.at(i).y);
-
+        // ?
         nextDepth[i].create(pyrDims.at(i).x, pyrDims.at(i).y);
         nextImage[i].create(pyrDims.at(i).x, pyrDims.at(i).y);
 
+        // ?
         lastNextImage[i].create(pyrDims.at(i).x, pyrDims.at(i).y);
 
+        // ?
         nextdIdx[i].create(pyrDims.at(i).x, pyrDims.at(i).y);
         nextdIdy[i].create(pyrDims.at(i).x, pyrDims.at(i).y);
 
+        // ?
         pointClouds[i].create(pyrDims.at(i).x, pyrDims.at(i).y);
 
+        // ?
         corresImg[i].create(pyrDims.at(i).x, pyrDims.at(i).y);
     }
 
+    // 设置内参
     intr.cx = cx;
     intr.cy = cy;
     intr.fx = fx;
     intr.fy = fy;
 
+    // ?
     iterations.resize(NUM_PYRS);
-
+    // ?
     depth_tmp.resize(NUM_PYRS);
-
+    // ?
     vmaps_g_prev_.resize(NUM_PYRS);
     nmaps_g_prev_.resize(NUM_PYRS);
-
+    // ?
     vmaps_curr_.resize(NUM_PYRS);
     nmaps_curr_.resize(NUM_PYRS);
 
+    // 在显存中依次创建上述数据区
     for (int i = 0; i < NUM_PYRS; ++i)
     {
         int pyr_rows = height >> i;
@@ -106,6 +119,7 @@ RGBDOdometry::RGBDOdometry(int width,
 
         depth_tmp[i].create (pyr_rows, pyr_cols);
 
+        // 注意这里行数 x 3
         vmaps_g_prev_[i].create (pyr_rows*3, pyr_cols);
         nmaps_g_prev_[i].create (pyr_rows*3, pyr_cols);
 
@@ -113,9 +127,11 @@ RGBDOdometry::RGBDOdometry(int width,
         nmaps_curr_[i].create (pyr_rows*3, pyr_cols);
     }
 
+    // ? 这里为什么是行数 x 4?
     vmaps_tmp.create(height * 4 * width);
     nmaps_tmp.create(height * 4 * width);
 
+    // ?
     minimumGradientMagnitudes.resize(NUM_PYRS);
     minimumGradientMagnitudes[0] = 5;
     minimumGradientMagnitudes[1] = 3;

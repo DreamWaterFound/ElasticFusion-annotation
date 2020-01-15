@@ -29,14 +29,20 @@
 
 #include "../Defines.h"
 
-/** @brief //? 疑似和绘制点云有关的类型 */
+/** @brief //? 疑似和绘制点云有关的类型  从深度图像计算得到点云数据*/
 class FeedbackBuffer
 {
     public:
+        /**
+         * @brief 构造函数
+         * @param[in] program 用于生成点云数据的着色器
+         */
         FeedbackBuffer(std::shared_ptr<Shader> program);
+
+        /** @brief 析构函数 */
         virtual ~FeedbackBuffer();
 
-        std::shared_ptr<Shader> program;
+        std::shared_ptr<Shader> program;        ///? 从深度图计算点云的着色器
 
         void compute(pangolin::GlTexture * color,
                      pangolin::GlTexture * depth,
@@ -55,15 +61,15 @@ class FeedbackBuffer
 
         EFUSION_API static const std::string RAW, FILTERED;
 
-        GLuint vbo;
-        GLuint fid;
+        GLuint vbo;         ///< 顶点缓冲对象的id
+        GLuint fid;         ///? 帧缓冲的id?
 
     private:
         std::shared_ptr<Shader> drawProgram;
         GLuint uvo;
         GLuint countQuery;
-        const int bufferSize;
-        unsigned int count;
+        const int bufferSize;                   ///? 顶点的个数? 占用字节的个数?
+        unsigned int count;                     ///?
 };
 
 #endif /* FEEDBACKBUFFER_H_ */

@@ -29,12 +29,12 @@
  
 #include "GPUTexture.h"
 
-const std::string GPUTexture::RGB = "RGB";
-const std::string GPUTexture::DEPTH_RAW = "DEPTH";
-const std::string GPUTexture::DEPTH_FILTERED = "DEPTH_FILTERED";
-const std::string GPUTexture::DEPTH_METRIC = "DEPTH_METRIC";
-const std::string GPUTexture::DEPTH_METRIC_FILTERED = "DEPTH_METRIC_FILTERED";
-const std::string GPUTexture::DEPTH_NORM = "DEPTH_NORM";
+const std::string GPUTexture::RGB                       = "RGB";                        // 原始彩色图像
+const std::string GPUTexture::DEPTH_RAW                 = "DEPTH";                      // 原始深度图像
+const std::string GPUTexture::DEPTH_FILTERED            = "DEPTH_FILTERED";             // 双边滤波后的深度图像
+const std::string GPUTexture::DEPTH_METRIC              = "DEPTH_METRIC";               // 度量表示的深度图像(float, 像素值表示距离)
+const std::string GPUTexture::DEPTH_METRIC_FILTERED     = "DEPTH_METRIC_FILTERED";      // 度量表示的双边滤波后的深度图像(float, 像素值表示距离)
+const std::string GPUTexture::DEPTH_NORM                = "DEPTH_NORM";                 // ? 根据深度图像计算得到的法向图
 
 // 构造函数
 GPUTexture::GPUTexture(const int width,

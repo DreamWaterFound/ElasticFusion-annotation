@@ -46,21 +46,19 @@ ElasticFusion::ElasticFusion(const int timeDelta,           // 时间窗口长�
                              const bool so3,                // Disables SO(3) pre-alignment in tracking
                              const bool frameToFrameRGB,    // 是否 Do frame-to-frame RGB tracking
                              const std::string fileName)    // 记录文件的位置, 对于实时摄像头来说是 basedir/live
- :  // TODO 
-    frameToModel(Resolution::getInstance().width(),         // 生成 frameToModel对齐的 对象, 给定图像的大小和相机内参 
+ :  frameToModel(Resolution::getInstance().width(),         // 生成 frameToModel 对齐的视觉里程计象, 给定图像的大小和相机内参 
                  Resolution::getInstance().height(),
                  Intrinsics::getInstance().cx(),
                  Intrinsics::getInstance().cy(),
                  Intrinsics::getInstance().fx(),
                  Intrinsics::getInstance().fy()),
-    // TODO
-    modelToModel(Resolution::getInstance().width(),         // 生成 modelToModel 对象, 给定图像的大小和相机内参 
+    modelToModel(Resolution::getInstance().width(),         // 生成 modelToModel 对齐的视觉里程计对象, 给定图像的大小和相机内参 
                  Resolution::getInstance().height(),
                  Intrinsics::getInstance().cx(),
                  Intrinsics::getInstance().cy(),
                  Intrinsics::getInstance().fx(),
                  Intrinsics::getInstance().fy()),
-    ferns(500,                                              // 生成随机蕨数据库对象 // ? 这个参数是?
+    ferns(500,                                              // 生成随机蕨数据库对象, 这个参数是蕨的棵数
           depthCut * 1000,                                  // 深度切断值转从 m 转换成为 mm
           photoThresh),                                     // Global loop closure photometric threshold
     saveFilename(fileName),                                 // 数据源文件
@@ -72,7 +70,7 @@ ElasticFusion::ElasticFusion(const int timeDelta,           // 时间窗口长�
     covThresh(covThresh),                                   // Local loop closure covariance threshold
     deforms(0),                                             // Local Loop 触发的 defomration 的次数
     fernDeforms(0),                                         // Global Loop 触发的 defomration 的次数
-    consSample(20),                                         // ? 疑似随机蕨中用于降采样的倍数, 下面的 resize 的构造能够体现出这一点
+    consSample(20),                                         // ? 疑似随机蕨中用于降采样的倍数(不是), 下面的 resize 的构造能够体现出这一点
     resize(Resolution::getInstance().width(),               // 构造使用GPU纹理操作实现的 resize 对象
            Resolution::getInstance().height(),
            Resolution::getInstance().width() / consSample,
@@ -100,8 +98,11 @@ ElasticFusion::ElasticFusion(const int timeDelta,           // 时间窗口长�
     frameToFrameRGB(frameToFrameRGB),                       // 是否 Do frame-to-frame RGB tracking
     depthCutoff(depthCut)                                   // 深度切断值(m)
 {
+    // 创建并在显存中分配纹理空间
     createTextures();
+    // 着色管线装配
     createCompute();
+    // ?
     createFeedbackBuffers();
 
     std::string filename = fileName;
@@ -175,8 +176,10 @@ ElasticFusion::~ElasticFusion()
     feedbackBuffers.clear();
 }
 
+// 创建纹理, 分配纹理空间
 void ElasticFusion::createTextures()
 {
+    // 输入的原始彩色图像
     textures[GPUTexture::RGB] = new GPUTexture(Resolution::getInstance().width(),
                                                Resolution::getInstance().height(),
                                                GL_RGBA,
@@ -184,13 +187,13 @@ void ElasticFusion::createTextures()
                                                GL_UNSIGNED_BYTE,
                                                true,
                                                true);
-
+    // 输入的原始深度图像
     textures[GPUTexture::DEPTH_RAW] = new GPUTexture(Resolution::getInstance().width(),
                                                      Resolution::getInstance().height(),
                                                      GL_LUMINANCE16UI_EXT,
                                                      GL_LUMINANCE_INTEGER_EXT,
                                                      GL_UNSIGNED_SHORT);
-
+    // 双边滤波后的输入深度图像
     textures[GPUTexture::DEPTH_FILTERED] = new GPUTexture(Resolution::getInstance().width(),
                                                           Resolution::getInstance().height(),
                                                           GL_LUMINANCE16UI_EXT,
@@ -198,46 +201,51 @@ void ElasticFusion::createTextures()
                                                           GL_UNSIGNED_SHORT,
                                                           false,
                                                           true);
-
+    // 度量表示的深度图像(float, 像素值表示距离)
     textures[GPUTexture::DEPTH_METRIC] = new GPUTexture(Resolution::getInstance().width(),
                                                         Resolution::getInstance().height(),
                                                         GL_LUMINANCE32F_ARB,
                                                         GL_LUMINANCE,
                                                         GL_FLOAT);
-
+    // 度量表示的双边滤波后的深度图像(float, 像素值表示距离)
     textures[GPUTexture::DEPTH_METRIC_FILTERED] = new GPUTexture(Resolution::getInstance().width(),
                                                                  Resolution::getInstance().height(),
                                                                  GL_LUMINANCE32F_ARB,
                                                                  GL_LUMINANCE,
                                                                  GL_FLOAT);
-
+    // ? 根据深度图像计算得到的法向图
     textures[GPUTexture::DEPTH_NORM] = new GPUTexture(Resolution::getInstance().width(),
                                                       Resolution::getInstance().height(),
-                                                      GL_LUMINANCE,
+                                                      GL_LUMINANCE,     // ? 为什么是这个?
                                                       GL_LUMINANCE,
                                                       GL_FLOAT,
                                                       true);
 }
 
+// 着色管线装配
 void ElasticFusion::createCompute()
 {
-    computePacks[ComputePack::NORM] = new ComputePack(loadProgramFromFile("empty.vert", "depth_norm.frag", "quad.geom"),
-                                                      textures[GPUTexture::DEPTH_NORM]->texture);
+    // 都是差不多的操作, 加载对应的着色器程序,指定输出结果保存到的纹理
+    // 加载的着色器程序第一个都是空, 第二个和具体 ComputePack 的功能相关, 第三个都是一样的
+    // TODO 
+    computePacks[ComputePack::NORM]            = new ComputePack(loadProgramFromFile("empty.vert", "depth_norm.frag", "quad.geom"),
+                                                        textures[GPUTexture::DEPTH_NORM]->texture);
 
-    computePacks[ComputePack::FILTER] = new ComputePack(loadProgramFromFile("empty.vert", "depth_bilateral.frag", "quad.geom"),
+    computePacks[ComputePack::FILTER]          = new ComputePack(loadProgramFromFile("empty.vert", "depth_bilateral.frag", "quad.geom"),
                                                         textures[GPUTexture::DEPTH_FILTERED]->texture);
 
-    computePacks[ComputePack::METRIC] = new ComputePack(loadProgramFromFile("empty.vert", "depth_metric.frag", "quad.geom"),
+    computePacks[ComputePack::METRIC]          = new ComputePack(loadProgramFromFile("empty.vert", "depth_metric.frag", "quad.geom"),
                                                         textures[GPUTexture::DEPTH_METRIC]->texture);
 
     computePacks[ComputePack::METRIC_FILTERED] = new ComputePack(loadProgramFromFile("empty.vert", "depth_metric.frag", "quad.geom"),
-                                                                 textures[GPUTexture::DEPTH_METRIC_FILTERED]->texture);
+                                                        textures[GPUTexture::DEPTH_METRIC_FILTERED]->texture);
 }
 
+// 
 void ElasticFusion::createFeedbackBuffers()
 {
-    feedbackBuffers[FeedbackBuffer::RAW] = new FeedbackBuffer(loadProgramGeomFromFile("vertex_feedback.vert", "vertex_feedback.geom"));
-    feedbackBuffers[FeedbackBuffer::FILTERED] = new FeedbackBuffer(loadProgramGeomFromFile("vertex_feedback.vert", "vertex_feedback.geom"));
+    feedbackBuffers[FeedbackBuffer::RAW]       = new FeedbackBuffer(loadProgramGeomFromFile("vertex_feedback.vert", "vertex_feedback.geom"));
+    feedbackBuffers[FeedbackBuffer::FILTERED]  = new FeedbackBuffer(loadProgramGeomFromFile("vertex_feedback.vert", "vertex_feedback.geom"));
 }
 
 // ? 调用这个函数计算原始点云和滤波后的点云信息? 

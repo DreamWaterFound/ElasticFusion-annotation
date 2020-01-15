@@ -52,6 +52,7 @@
 #ifndef CUDA_CUDAFUNCS_CUH_
 #define CUDA_CUDAFUNCS_CUH_
 
+// ? 一个 Blocks 中的最大线程数?
 #if __CUDA_ARCH__ < 300
 #define MAX_THREADS 512
 #else

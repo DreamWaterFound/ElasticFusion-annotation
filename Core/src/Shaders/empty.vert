@@ -1,3 +1,14 @@
+/**
+ * @file ComputePack.h
+ * @author guoqing (1337841346@qq.com)
+ * @brief 空顶点着色器
+ * @version 0.1
+ * @date 2020-01-15
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 /*
  * This file is part of ElasticFusion.
  *
@@ -16,7 +27,10 @@
  *
  */
 
+
 #version 330
+
+// 对, 啥都不干
 
 void main()
 { 

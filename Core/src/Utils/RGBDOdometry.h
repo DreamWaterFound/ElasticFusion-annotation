@@ -62,8 +62,8 @@ class RGBDOdometry
          * @param[in] cy            cy
          * @param[in] fx            fx
          * @param[in] fy            fy
-         * @param[in] distThresh    最大距离阈值
-         * @param[in] angleThresh   最大角度差阈值
+         * @param[in] distThresh    最大距离阈值（默认0.1m）
+         * @param[in] angleThresh   最大角度差阈值（默认为20°对应的正弦值）
          */
         RGBDOdometry(int width,                                     
                      int height,
@@ -134,60 +134,60 @@ class RGBDOdometry
                               DeviceArray2D<float> * destDepths,
                               DeviceArray2D<unsigned char> * destImages);
 
-        std::vector<DeviceArray2D<unsigned short> > depth_tmp;
+        std::vector<DeviceArray2D<unsigned short> > depth_tmp;      ///? 深度图像的 vector, 用于做什么?
 
-        DeviceArray<float> vmaps_tmp;
-        DeviceArray<float> nmaps_tmp;
+        DeviceArray<float> vmaps_tmp;                               ///? 顶点图, 这个是做什么的, 又为什么没有使用图像金字塔的形式?
+        DeviceArray<float> nmaps_tmp;                               ///? 法向图, 疑问同上
 
-        std::vector<DeviceArray2D<float> > vmaps_g_prev_;
-        std::vector<DeviceArray2D<float> > nmaps_g_prev_;
+        std::vector<DeviceArray2D<float> > vmaps_g_prev_;           ///? 顶点图, 金字塔形式 保存什么的顶点图? 而且顶点图中的数据类型不应该是 float3 吗?
+        std::vector<DeviceArray2D<float> > nmaps_g_prev_;           ///? 法向图? 
 
-        std::vector<DeviceArray2D<float> > vmaps_curr_;
-        std::vector<DeviceArray2D<float> > nmaps_curr_;
+        std::vector<DeviceArray2D<float> > vmaps_curr_;             ///? 顶点图?
+        std::vector<DeviceArray2D<float> > nmaps_curr_;             ///? 法向图?
 
-        CameraModel intr;
+        CameraModel intr;                                           ///< 相机模型对象, 记录了相机的内参
 
-        DeviceArray<JtJJtrSE3> sumDataSE3;      ///? 
-        DeviceArray<JtJJtrSE3> outDataSE3;
-        DeviceArray<int2> sumResidualRGB;
+        DeviceArray<JtJJtrSE3> sumDataSE3;                          ///< 用于存储计算误差的累加和, 主要内容放在显存中
+        DeviceArray<JtJJtrSE3> outDataSE3;                          ///< 最终累加和
+        DeviceArray<int2> sumResidualRGB;                           ///? 
 
-        DeviceArray<JtJJtrSO3> sumDataSO3;
-        DeviceArray<JtJJtrSO3> outDataSO3;
+        DeviceArray<JtJJtrSO3> sumDataSO3;                          ///? 只考虑旋转的时候的误差累加和?
+        DeviceArray<JtJJtrSO3> outDataSO3;                          ///? 对应上一个变量
 
-        const int sobelSize;                ///?
-        const float sobelScale;             ///? 1/(sobelSize^2)
-        const float maxDepthDeltaRGB;       ///?
-        const float maxDepthRGB;            ///?
+        const int sobelSize;                                        ///?
+        const float sobelScale;                                     ///? 1/(sobelSize^2)
+        const float maxDepthDeltaRGB;                               ///?
+        const float maxDepthRGB;                                    ///?
 
-        std::vector<int2> pyrDims;
+        std::vector<int2> pyrDims;                                  ///? 从下到上, 记录了图像金字塔中每一层图像的大小 (high, width)
 
-        static const int NUM_PYRS = 3;
+        static const int NUM_PYRS = 3;                              ///< 使用的图像金字塔的层数
 
-        DeviceArray2D<float> lastDepth[NUM_PYRS];
-        DeviceArray2D<unsigned char> lastImage[NUM_PYRS];
+        DeviceArray2D<float> lastDepth[NUM_PYRS];                   ///? 上一帧的深度图像? input还是predicted?
+        DeviceArray2D<unsigned char> lastImage[NUM_PYRS];           ///? 上一帧的灰度图像, 和上面的内容相对应(彩色图像全部都转换成为灰度图像了)
 
-        DeviceArray2D<float> nextDepth[NUM_PYRS];
-        DeviceArray2D<unsigned char> nextImage[NUM_PYRS];
-        DeviceArray2D<short> nextdIdx[NUM_PYRS];
-        DeviceArray2D<short> nextdIdy[NUM_PYRS];
+        DeviceArray2D<float> nextDepth[NUM_PYRS];                   ///? 什么深度图像
+        DeviceArray2D<unsigned char> nextImage[NUM_PYRS];           ///? 什么彩色图像
+        DeviceArray2D<short> nextdIdx[NUM_PYRS];                    ///? 
+        DeviceArray2D<short> nextdIdy[NUM_PYRS];                    ///?
 
         DeviceArray2D<unsigned char> lastNextImage[NUM_PYRS];
 
-        DeviceArray2D<DataTerm> corresImg[NUM_PYRS];
+        DeviceArray2D<DataTerm> corresImg[NUM_PYRS];                ///? 
 
-        DeviceArray2D<float3> pointClouds[NUM_PYRS];
+        DeviceArray2D<float3> pointClouds[NUM_PYRS];                ///? 什么点云对应的"金字塔"?
 
-        std::vector<int> iterations;
-        std::vector<float> minimumGradientMagnitudes;
+        std::vector<int> iterations;                                ///? 和迭代\图像金字塔有关
+        std::vector<float> minimumGradientMagnitudes;               ///? 和梯度有关?
 
-        float distThres_;                       ///< 成为匹配点的最大距离阈值
-        float angleThres_;                      ///< 成为匹配点的最大角度阈值的正弦值
+        float distThres_;                                           ///< 成为匹配点的最大距离阈值
+        float angleThres_;                                          ///< 成为匹配点的最大角度阈值的正弦值
 
         Eigen::Matrix<double, 6, 6> lastCov;
 
-        const int width;                        ///< 输入图像宽度
-        const int height;                       ///< 输入图像高度
-        const float cx, cy, fx, fy;             ///< 相机内参
+        const int width;                                            ///< 输入图像宽度
+        const int height;                                           ///< 输入图像高度
+        const float cx, cy, fx, fy;                                 ///< 相机内参
 };
 
 #endif /* RGBDODOMETRY_H_ */

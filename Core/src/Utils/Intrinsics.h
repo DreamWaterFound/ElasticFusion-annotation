@@ -30,8 +30,9 @@
 #ifndef INTRINSICS_H_
 #define INTRINSICS_H_
 
+// C
 #include <cassert>
-
+// windows DLL
 #include "../Defines.h"
 
 /** @brief 保存相机内参 fx fy cx cy 的类 */
@@ -48,27 +49,51 @@ class Intrinsics
          */
         EFUSION_API static const Intrinsics & getInstance(float fx = 0,float fy = 0,float cx = 0,float cy = 0);
 
+        /**
+         * @brief 获取相机内参 fx
+         * @return const float& fx
+         */
         const float & fx() const
         {
             return fx_;
         }
 
+        /**
+         * @brief 获取相机内参 fy
+         * @return const float& fy
+         */
         const float & fy() const
         {
             return fy_;
         }
 
+        /**
+         * @brief 获取相机内参 cx
+         * @return const float& cx
+         */
         const float & cx() const
         {
             return cx_;
         }
 
+        /**
+         * @brief 获取相机内参 cy
+         * @return const float& cy
+         */
         const float & cy() const
         {
             return cy_;
         }
 
     private:
+
+        /**
+         * @brief 给定相机内参的构造函数
+         * @param[in] fx 
+         * @param[in] fy 
+         * @param[in] cx 
+         * @param[in] cy 
+         */
         Intrinsics(float fx, float fy, float cx, float cy)
          : fx_(fx),
            fy_(fy),
@@ -78,6 +103,7 @@ class Intrinsics
             assert(fx != 0 && fy != 0 && "You haven't initialised the Intrinsics class!");
         }
 
+        /// 相机内参
         const float fx_, fy_, cx_, cy_;
 };
 
